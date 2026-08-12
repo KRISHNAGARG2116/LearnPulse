@@ -1,0 +1,26 @@
+# Maven build output
+target/
+
+# Local JDK / development tools
+.jdk21/
+.tools/
+jdk21_clean.tar.gz
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# macOS
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Java compiled files
+*.class
+
+# Logs
+*.log
