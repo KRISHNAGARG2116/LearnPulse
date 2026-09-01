@@ -24,3 +24,7 @@ jdk21_clean.tar.gz
 
 # Logs
 *.log
+
+# Runtime Uploads Directory
+uploads/
+
