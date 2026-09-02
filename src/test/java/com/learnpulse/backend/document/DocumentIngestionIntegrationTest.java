@@ -69,8 +69,20 @@ class DocumentIngestionIntegrationTest {
     private String teacherToken;
     private String studentToken;
 
+    @Autowired
+    private com.learnpulse.backend.repository.QuizRepository quizRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.QuestionRepository questionRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
+
     @BeforeEach
     void setUp() {
+        resultRepository.deleteAll();
+        questionRepository.deleteAll();
+        quizRepository.deleteAll();
         notesRepository.deleteAll();
         documentRepository.deleteAll();
         chapterRepository.deleteAll();

@@ -55,8 +55,28 @@ class StudentTeacherProfileIntegrationTest {
     private String student2Token;
     private String teacher1Token;
 
+    @Autowired
+    private com.learnpulse.backend.repository.QuizRepository quizRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.QuestionRepository questionRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.UploadedDocumentRepository documentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.NotesRepository notesRepository;
+
     @BeforeEach
     void setUp() {
+        resultRepository.deleteAll();
+        questionRepository.deleteAll();
+        quizRepository.deleteAll();
+        notesRepository.deleteAll();
+        documentRepository.deleteAll();
         userProfileRepository.deleteAll();
         userRepository.deleteAll();
 

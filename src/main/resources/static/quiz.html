@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnPulse LMS — Single Page Quiz Experience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 860px;
+        }
+
+        /* Top Header & Authentication Bar */
+        .header-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"] {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            min-width: 220px;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border: none;
+            border-radius: 8px;
+            padding: 0.6rem 1.25rem;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Result Summary Top Banner */
+        .result-summary-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 1.75rem 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.3);
+            display: none;
+        }
+
+        .result-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #a5b4fc;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .result-box {
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-val {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .result-val.right { color: var(--success); }
+        .result-val.wrong { color: var(--danger); }
+        .result-val.score { color: var(--primary); }
+
+        .result-lbl {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Question Scrollable List (Google Forms Style) */
+        .question-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .question-number {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.25rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .option-label:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .option-label input[type="radio"] {
+            margin-right: 1rem;
+            accent-color: var(--primary);
+            width: 18px;
+            height: 18px;
+        }
+
+        .option-label.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.15);
+        }
+
+        /* Per-Question Reveal Action */
+        .question-footer {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 1.25rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reveal-btn {
+            background: rgba(139, 92, 246, 0.2);
+            border: 1px solid var(--accent);
+            color: #c084fc;
+            font-size: 0.85rem;
+            padding: 0.45rem 1rem;
+        }
+
+        .reveal-btn:hover:not(:disabled) {
+            background: var(--accent);
+            color: white;
+        }
+
+        .revealed-answer-box {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 10px;
+            padding: 0.85rem 1.25rem;
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            color: #e9d5ff;
+            display: none;
+        }
+
+        /* Post-Submission Review Badges */
+        .review-box {
+            margin-top: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .review-box.correct {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+
+        .review-box.wrong {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        /* Bottom Submit Bar */
+        .submit-bar {
+            text-align: center;
+            margin-top: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .submit-btn {
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 360px;
+        }
+
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header & Quiz Selector -->
+    <div class="header-card">
+        <h1 class="header-title">LearnPulse AI Assessment Engine</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">Single-Page Scrollable Assessment Experience</p>
+
+        <div class="auth-bar">
+            <input type="text" id="jwtToken" placeholder="Paste Student JWT Access Token or Click Demo Login" />
+            <button onclick="loginDemoStudent()">Demo Student Login</button>
+            <button onclick="fetchQuizzes()">Load Quizzes</button>
+        </div>
+
+        <div style="margin-top: 1rem; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <label style="font-size: 0.9rem; color: var(--text-secondary);">Select Quiz:</label>
+            <select id="quizSelect" onchange="loadSelectedQuiz()">
+                <option value="">-- Choose Quiz --</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Result Summary Card (Displayed at Top After Submission) -->
+    <div id="resultSummary" class="result-summary-card">
+        <h2 class="result-title">QUIZ ASSESSMENT RESULT</h2>
+        <div class="result-grid">
+            <div class="result-box">
+                <div class="result-val right" id="resRight">0 / 0</div>
+                <div class="result-lbl">Right Answers</div>
+            </div>
+            <div class="result-box">
+                <div class="result-val wrong" id="resWrong">0 / 0</div>
+                <div class="result-lbl">Wrong Answers</div>
+            </div>
+            <div class="result-box">
+                <div class="result-val score" id="resScore">0%</div>
+                <div class="result-lbl">Score / Percentage</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Delivery Details Header -->
+    <div id="quizHeader" style="display: none; margin-bottom: 1.5rem;">
+        <h2 id="quizTitle" style="font-family: 'Outfit', sans-serif; font-size: 1.5rem;"></h2>
+        <p id="quizDesc" style="color: var(--text-secondary); margin-top: 0.25rem; font-size: 0.95rem;"></p>
+        <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--accent); font-weight: 600;">
+            Total Marks: <span id="quizTotalMarks"></span>
+        </div>
+    </div>
+
+    <!-- Single Scrollable Question List (Google Forms Style) -->
+    <div id="questionsContainer"></div>
+
+    <!-- Submit Bar -->
+    <div id="submitBar" class="submit-bar" style="display: none;">
+        <button id="btnSubmitQuiz" class="submit-btn" onclick="submitQuiz()">Submit Quiz Assessment</button>
+    </div>
+</div>
+
+<script>
+    let currentQuiz = null;
+    let selectedAnswers = {}; // questionId -> selectedOption ("A", "B", "C", "D")
+    let revealedAnswers = {}; // questionId -> revealResponse object
+    let isSubmitted = false;
+
+    async function loginDemoStudent() {
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: `student_${Date.now()}@learnpulse.ai`,
+                    password: 'StudentPass123!',
+                    firstName: 'Demo',
+                    lastName: 'Student',
+                    role: 'STUDENT'
+                })
+            });
+            const data = await res.json();
+            if (data.data && data.data.accessToken) {
+                document.getElementById('jwtToken').value = data.data.accessToken;
+                alert('Demo Student authenticated successfully!');
+                fetchQuizzes();
+            }
+        } catch (e) {
+            alert('Login failed: ' + e.message);
+        }
+    }
+
+    async function fetchQuizzes() {
+        const token = document.getElementById('jwtToken').value.trim();
+        const res = await fetch('/api/quizzes', {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            const select = document.getElementById('quizSelect');
+            select.innerHTML = '<option value="">-- Choose Quiz --</option>';
+            data.data.forEach(q => {
+                const opt = document.createElement('option');
+                opt.value = q.id;
+                opt.textContent = `${q.title} (${q.totalMarks} Marks)`;
+                select.appendChild(opt);
+            });
+            if (data.data.length > 0) {
+                select.value = data.data[0].id;
+                loadSelectedQuiz();
+            }
+        } else {
+            alert('Error loading quizzes: ' + data.message);
+        }
+    }
+
+    async function loadSelectedQuiz() {
+        const quizId = document.getElementById('quizSelect').value;
+        if (!quizId) return;
+
+        const token = document.getElementById('jwtToken').value.trim();
+        const res = await fetch(`/api/quizzes/${quizId}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+            currentQuiz = data.data;
+            selectedAnswers = {};
+            revealedAnswers = {};
+            isSubmitted = false;
+
+            document.getElementById('resultSummary').style.display = 'none';
+            renderQuizHeader();
+            renderQuestionsScrollable();
+        }
+    }
+
+    function renderQuizHeader() {
+        document.getElementById('quizHeader').style.display = 'block';
+        document.getElementById('quizTitle').textContent = currentQuiz.title;
+        document.getElementById('quizDesc').textContent = currentQuiz.description || '';
+        document.getElementById('quizTotalMarks').textContent = currentQuiz.totalMarks;
+        document.getElementById('submitBar').style.display = 'block';
+        document.getElementById('btnSubmitQuiz').style.display = 'inline-block';
+        document.getElementById('btnSubmitQuiz').disabled = false;
+        document.getElementById('btnSubmitQuiz').textContent = 'Submit Quiz Assessment';
+    }
+
+    function renderQuestionsScrollable() {
+        const container = document.getElementById('questionsContainer');
+        container.innerHTML = '';
+
+        currentQuiz.questions.forEach((q, idx) => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `qCard_${q.id}`;
+
+            card.innerHTML = `
+                <div class="question-number">Question ${idx + 1} of ${currentQuiz.questions.length} • (${q.marks} Mark${q.marks > 1 ? 's' : ''})</div>
+                <div class="question-text">${escapeHtml(q.questionText)}</div>
+
+                <div class="options-list">
+                    ${renderOptionItem(q.id, 'A', q.optionA)}
+                    ${renderOptionItem(q.id, 'B', q.optionB)}
+                    ${renderOptionItem(q.id, 'C', q.optionC)}
+                    ${renderOptionItem(q.id, 'D', q.optionD)}
+                </div>
+
+                <div class="question-footer">
+                    <button id="revealBtn_${q.id}" class="reveal-btn" disabled onclick="revealAnswer('${q.id}')">
+                        💡 Reveal Answer
+                    </button>
+                </div>
+
+                <div id="revealedBox_${q.id}" class="revealed-answer-box"></div>
+                <div id="reviewBox_${q.id}" class="review-box"></div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function renderOptionItem(qId, key, text) {
+        return `
+            <label class="option-label" id="lbl_${qId}_${key}">
+                <input type="radio" name="opt_${qId}" value="${key}" onchange="selectOption('${qId}', '${key}')" />
+                <span><b>${key}.</b> ${escapeHtml(text)}</span>
+            </label>
+        `;
+    }
+
+    function selectOption(qId, selectedOpt) {
+        if (isSubmitted) return;
+
+        // Store selected choice
+        selectedAnswers[qId] = selectedOpt;
+
+        // Highlight selection ONLY. DO NOT reveal correctness!
+        ['A', 'B', 'C', 'D'].forEach(k => {
+            const lbl = document.getElementById(`lbl_${qId}_${k}`);
+            if (lbl) {
+                lbl.classList.toggle('selected', k === selectedOpt);
+            }
+        });
+
+        // PREREQUISITE SATISFIED: Enable Reveal Answer button for this question
+        const revealBtn = document.getElementById(`revealBtn_${qId}`);
+        if (revealBtn && !revealedAnswers[qId]) {
+            revealBtn.disabled = false;
+        }
+    }
+
+    async function revealAnswer(qId) {
+        const selectedOpt = selectedAnswers[qId];
+        if (!selectedOpt) {
+            alert('Security Requirement: You must select an option before revealing the answer.');
+            return;
+        }
+
+        const token = document.getElementById('jwtToken').value.trim();
+        if (!token) {
+            alert('Please login to reveal answers.');
+            return;
+        }
+
+        const btn = document.getElementById(`revealBtn_${qId}`);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loader"></span> Revealing...';
+
+        try {
+            const res = await fetch(`/api/quizzes/${currentQuiz.id}/questions/${qId}/reveal`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ selectedOption: selectedOpt })
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                revealedAnswers[qId] = data.data;
+
+                // Display ACTUAL CORRECT ANSWER directly below the button
+                const revBox = document.getElementById(`revealedBox_${qId}`);
+                revBox.style.display = 'block';
+                revBox.innerHTML = `
+                    <b>Correct Answer: Option ${data.data.correctAnswer}</b>
+                    <br/><i style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.2rem; display: inline-block;">Note: Revealing the answer does not change your selected answer (${selectedOpt}) or final score.</i>
+                `;
+
+                btn.textContent = `✓ Answer Revealed (${data.data.correctAnswer})`;
+                btn.style.opacity = '0.6';
+            } else {
+                alert('Reveal Error: ' + data.message);
+                btn.disabled = false;
+                btn.textContent = '💡 Reveal Answer';
+            }
+        } catch (e) {
+            alert('Network error revealing answer: ' + e.message);
+            btn.disabled = false;
+            btn.textContent = '💡 Reveal Answer';
+        }
+    }
+
+    async function submitQuiz() {
+        if (!currentQuiz) return;
+        const token = document.getElementById('jwtToken').value.trim();
+        if (!token) {
+            alert('Please authenticate before submitting the quiz.');
+            return;
+        }
+
+        const answersList = Object.keys(selectedAnswers).map(qId => ({
+            questionId: qId,
+            selectedAnswer: selectedAnswers[qId]
+        }));
+
+        if (answersList.length === 0) {
+            if (!confirm('You have not selected answers for any questions. Submit anyway?')) return;
+        }
+
+        const btn = document.getElementById('btnSubmitQuiz');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loader"></span> Grading Submission Server-Side...';
+
+        try {
+            const res = await fetch('/api/quizzes/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    quizId: currentQuiz.id,
+                    answers: answersList
+                })
+            });
+
+            const data = await res.json();
+            if (data.status === 'success') {
+                isSubmitted = true;
+                const result = data.data;
+
+                // 1. Display Result Summary Banner at TOP
+                const summary = document.getElementById('resultSummary');
+                summary.style.display = 'block';
+                document.getElementById('resRight').textContent = `${result.correctAnswers} / ${currentQuiz.questions.length}`;
+                document.getElementById('resWrong').textContent = `${result.wrongAnswers} / ${currentQuiz.questions.length}`;
+                document.getElementById('resScore').textContent = `${result.percentage}% (${result.score} Marks)`;
+
+                // 2. Disable selection radio buttons post-submission
+                document.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+
+                // Scroll smoothly to Top Result Summary
+                summary.scrollIntoView({ behavior: 'smooth' });
+
+                btn.style.display = 'none';
+            } else {
+                alert('Submission Error: ' + data.message);
+                btn.disabled = false;
+                btn.textContent = 'Submit Quiz Assessment';
+            }
+        } catch (e) {
+            alert('Submission failed: ' + e.message);
+            btn.disabled = false;
+            btn.textContent = 'Submit Quiz Assessment';
+        }
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+</script>
+</body>
+</html>
