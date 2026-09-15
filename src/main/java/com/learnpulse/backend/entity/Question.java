@@ -41,6 +41,11 @@ public class Question {
     private String correctAnswer;
 
     @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source", nullable = false)
+    private QuestionSource source = QuestionSource.TEACHER_MANUAL;
+
+    @Builder.Default
     @Column(name = "marks", nullable = false)
     private Integer marks = 1;
 

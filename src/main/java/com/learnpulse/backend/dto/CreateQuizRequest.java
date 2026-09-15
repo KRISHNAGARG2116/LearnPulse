@@ -1,5 +1,7 @@
 package com.learnpulse.backend.dto;
 
+import com.learnpulse.backend.entity.QuizStatus;
+import com.learnpulse.backend.entity.QuizType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -25,6 +27,13 @@ public class CreateQuizRequest {
     private String description;
     private UUID subjectId;
     private UUID chapterId;
+
+    private QuizType quizType;
+    private QuizStatus status;
+    private Boolean isPublished;
+    private Double passingScorePercentage;
+    private String teacherPriorities;
+    private String customInstructions;
 
     @NotEmpty(message = "Quiz must contain at least one question")
     @Valid

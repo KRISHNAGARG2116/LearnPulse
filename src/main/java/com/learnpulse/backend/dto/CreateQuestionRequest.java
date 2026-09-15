@@ -1,5 +1,6 @@
 package com.learnpulse.backend.dto;
 
+import com.learnpulse.backend.entity.QuestionSource;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +34,8 @@ public class CreateQuestionRequest {
     @NotBlank(message = "Correct answer is required")
     @Pattern(regexp = "^[A-D]$", message = "Correct answer must be 'A', 'B', 'C', or 'D'")
     private String correctAnswer;
+
+    private QuestionSource source;
 
     @NotNull(message = "Marks value is required")
     @Min(value = 1, message = "Marks must be at least 1")

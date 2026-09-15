@@ -34,6 +34,30 @@ public class Quiz {
     @JoinColumn(name = "chapter_id")
     private Chapter chapter;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quiz_type", nullable = false)
+    private QuizType quizType = QuizType.CHAPTER_QUIZ;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private QuizStatus status = QuizStatus.PUBLISHED;
+
+    @Builder.Default
+    @Column(name = "is_published", nullable = false)
+    private Boolean isPublished = true;
+
+    @Builder.Default
+    @Column(name = "passing_score_percentage", nullable = false)
+    private Double passingScorePercentage = 80.0;
+
+    @Column(name = "teacher_priorities", columnDefinition = "TEXT")
+    private String teacherPriorities;
+
+    @Column(name = "custom_instructions", columnDefinition = "TEXT")
+    private String customInstructions;
+
     @Column(name = "total_marks", nullable = false)
     private Integer totalMarks;
 

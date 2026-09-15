@@ -41,6 +41,10 @@ public class StudentQuizResult {
     @Column(name = "wrong_answers", nullable = false)
     private Integer wrongAnswers;
 
+    @Builder.Default
+    @Column(name = "is_passed", nullable = false)
+    private Boolean isPassed = false;
+
     @Column(name = "attempted_at", nullable = false)
     private Instant attemptedAt;
 

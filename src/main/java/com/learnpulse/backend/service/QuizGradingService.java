@@ -26,6 +26,7 @@ public class QuizGradingService {
 
     private final QuizRepository quizRepository;
     private final StudentQuizResultRepository resultRepository;
+    private final CourseProgressionService courseProgressionService;
 
     @Transactional
     public StudentQuizResultDTO submitQuiz(User student, QuizSubmissionRequest submission) {
@@ -35,6 +36,8 @@ public class QuizGradingService {
 
         Quiz quiz = quizRepository.findById(submission.getQuizId())
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with ID: " + submission.getQuizId()));
+
+        courseProgressionService.validateQuizAccess(student, quiz);
 
         Map<UUID, Question> questionMap = quiz.getQuestions().stream()
                 .collect(Collectors.toMap(Question::getId, Function.identity()));
@@ -78,6 +81,9 @@ public class QuizGradingService {
                 .setScale(2, RoundingMode.HALF_UP)
                 .doubleValue();
 
+        double passingThreshold = quiz.getPassingScorePercentage() != null ? quiz.getPassingScorePercentage() : (quiz.getQuizType() == QuizType.FINAL_COURSE_QUIZ ? 75.0 : 80.0);
+        boolean isPassed = percentage >= passingThreshold;
+
         StudentQuizResult result = StudentQuizResult.builder()
                 .student(student)
                 .quiz(quiz)
@@ -86,11 +92,12 @@ public class QuizGradingService {
                 .percentage(percentage)
                 .correctAnswers(correctAnswers)
                 .wrongAnswers(wrongAnswers)
+                .isPassed(isPassed)
                 .build();
 
         StudentQuizResult savedResult = resultRepository.save(result);
-        log.info("Quiz submitted successfully by student ID: {} for Quiz ID: {}. Score: {}/{} ({}%)",
-                student.getId(), quiz.getId(), score, totalMarks, percentage);
+        log.info("Quiz submitted successfully by student ID: {} for Quiz ID: {}. Score: {}/{} ({}%, Passed: {})",
+                student.getId(), quiz.getId(), score, totalMarks, percentage, isPassed);
 
         return mapToDTO(savedResult);
     }
@@ -169,6 +176,9 @@ public class QuizGradingService {
     }
 
     public StudentQuizResultDTO mapToDTO(StudentQuizResult result) {
+        double passingScore = result.getQuiz().getPassingScorePercentage() != null ? result.getQuiz().getPassingScorePercentage() : 80.0;
+        boolean passed = result.getIsPassed() != null ? result.getIsPassed() : result.getPercentage() >= passingScore;
+
         return StudentQuizResultDTO.builder()
                 .id(result.getId())
                 .quizId(result.getQuiz().getId())
@@ -180,6 +190,8 @@ public class QuizGradingService {
                 .percentage(result.getPercentage())
                 .correctAnswers(result.getCorrectAnswers())
                 .wrongAnswers(result.getWrongAnswers())
+                .isPassed(passed)
+                .passingScorePercentage(passingScore)
                 .attemptedAt(result.getAttemptedAt())
                 .build();
     }

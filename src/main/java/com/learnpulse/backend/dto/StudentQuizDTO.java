@@ -1,5 +1,7 @@
 package com.learnpulse.backend.dto;
 
+import com.learnpulse.backend.entity.QuizStatus;
+import com.learnpulse.backend.entity.QuizType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +25,10 @@ public class StudentQuizDTO {
     private UUID chapterId;
     private String chapterTitle;
     private Integer totalMarks;
+    private QuizType quizType;
+    private QuizStatus status;
+    private Boolean isPublished;
+    private Double passingScorePercentage;
     private UUID createdById;
     private String createdByEmail;
     private List<StudentQuestionDTO> questions;

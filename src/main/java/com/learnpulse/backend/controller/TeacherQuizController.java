@@ -36,4 +36,14 @@ public class TeacherQuizController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Quiz created successfully", createdQuiz));
     }
+
+    @PostMapping("/quizzes/{id}/publish")
+    @Operation(summary = "Publish a draft quiz", description = "Transitions a draft quiz to PUBLISHED state so it becomes available to students")
+    public ResponseEntity<ApiResponse<TeacherQuizDTO>> publishQuiz(
+            @AuthenticationPrincipal User teacher,
+            @PathVariable java.util.UUID id) {
+
+        TeacherQuizDTO publishedQuiz = quizService.publishQuiz(teacher, id);
+        return ResponseEntity.ok(ApiResponse.success("Quiz published successfully", publishedQuiz));
+    }
 }

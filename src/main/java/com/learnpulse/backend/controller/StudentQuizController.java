@@ -39,8 +39,11 @@ public class StudentQuizController {
 
     @GetMapping("/api/quizzes/{id}")
     @Operation(summary = "Get quiz details for delivery", description = "Retrieves details and questions for a specific quiz. Correct answers are strictly hidden.")
-    public ResponseEntity<ApiResponse<StudentQuizDTO>> getQuizById(@PathVariable UUID id) {
-        StudentQuizDTO quiz = quizService.getQuizByIdForStudent(id);
+    public ResponseEntity<ApiResponse<StudentQuizDTO>> getQuizById(
+            @AuthenticationPrincipal User student,
+            @PathVariable UUID id) {
+
+        StudentQuizDTO quiz = quizService.getQuizByIdForStudent(student, id);
         return ResponseEntity.ok(ApiResponse.success("Quiz retrieved successfully", quiz));
     }
 

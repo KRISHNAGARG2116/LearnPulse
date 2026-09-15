@@ -28,6 +28,7 @@ public class QuizService {
     private final QuestionRepository questionRepository;
     private final SubjectRepository subjectRepository;
     private final ChapterRepository chapterRepository;
+    private final CourseProgressionService courseProgressionService;
 
     @Transactional
     public TeacherQuizDTO createQuiz(User creator, CreateQuizRequest request) {
@@ -54,6 +55,11 @@ public class QuizService {
             }
         }
 
+        QuizType quizType = request.getQuizType() != null ? request.getQuizType() : (chapter != null ? QuizType.CHAPTER_QUIZ : QuizType.FINAL_COURSE_QUIZ);
+        QuizStatus status = request.getStatus() != null ? request.getStatus() : QuizStatus.PUBLISHED;
+        boolean isPublished = request.getIsPublished() != null ? request.getIsPublished() : true;
+        double passingScore = request.getPassingScorePercentage() != null ? request.getPassingScorePercentage() : (quizType == QuizType.FINAL_COURSE_QUIZ ? 75.0 : 80.0);
+
         int calculatedTotalMarks = 0;
         List<Question> questionEntities = new ArrayList<>();
 
@@ -62,6 +68,12 @@ public class QuizService {
                 .description(request.getDescription())
                 .subject(subject)
                 .chapter(chapter)
+                .quizType(quizType)
+                .status(status)
+                .isPublished(isPublished)
+                .passingScorePercentage(passingScore)
+                .teacherPriorities(request.getTeacherPriorities())
+                .customInstructions(request.getCustomInstructions())
                 .createdBy(creator)
                 .totalMarks(0)
                 .build();
@@ -69,6 +81,8 @@ public class QuizService {
         for (CreateQuestionRequest qReq : request.getQuestions()) {
             int qMarks = (qReq.getMarks() != null && qReq.getMarks() > 0) ? qReq.getMarks() : 1;
             calculatedTotalMarks += qMarks;
+
+            QuestionSource source = qReq.getSource() != null ? qReq.getSource() : QuestionSource.TEACHER_MANUAL;
 
             Question question = Question.builder()
                     .quiz(quiz)
@@ -78,6 +92,7 @@ public class QuizService {
                     .optionC(qReq.getOptionC().trim())
                     .optionD(qReq.getOptionD().trim())
                     .correctAnswer(qReq.getCorrectAnswer().trim().toUpperCase())
+                    .source(source)
                     .marks(qMarks)
                     .build();
 
@@ -90,6 +105,23 @@ public class QuizService {
         Quiz savedQuiz = quizRepository.save(quiz);
         log.info("Quiz created successfully with ID: {} and total marks: {}", savedQuiz.getId(), savedQuiz.getTotalMarks());
 
+        return mapToTeacherDTO(savedQuiz);
+    }
+
+    @Transactional
+    public TeacherQuizDTO publishQuiz(User teacher, UUID quizId) {
+        if (teacher == null) {
+            throw new ApiException("Authentication required to publish quiz", HttpStatus.UNAUTHORIZED);
+        }
+
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with ID: " + quizId));
+
+        quiz.setStatus(QuizStatus.PUBLISHED);
+        quiz.setIsPublished(true);
+
+        Quiz savedQuiz = quizRepository.save(quiz);
+        log.info("Quiz published successfully with ID: {}", savedQuiz.getId());
         return mapToTeacherDTO(savedQuiz);
     }
 
@@ -143,14 +175,20 @@ public class QuizService {
         }
 
         return quizzes.stream()
+                .filter(q -> Boolean.TRUE.equals(q.getIsPublished()) && q.getStatus() == QuizStatus.PUBLISHED)
                 .map(this::mapToStudentDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public StudentQuizDTO getQuizByIdForStudent(UUID quizId) {
+    public StudentQuizDTO getQuizByIdForStudent(User student, UUID quizId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found with ID: " + quizId));
+
+        if (student != null) {
+            courseProgressionService.validateQuizAccess(student, quiz);
+        }
+
         return mapToStudentDTO(quiz);
     }
 
@@ -183,6 +221,10 @@ public class QuizService {
                 .chapterId(quiz.getChapter() != null ? quiz.getChapter().getId() : null)
                 .chapterTitle(quiz.getChapter() != null ? quiz.getChapter().getTitle() : null)
                 .totalMarks(quiz.getTotalMarks())
+                .quizType(quiz.getQuizType())
+                .status(quiz.getStatus())
+                .isPublished(quiz.getIsPublished())
+                .passingScorePercentage(quiz.getPassingScorePercentage())
                 .createdById(quiz.getCreatedBy().getId())
                 .createdByEmail(quiz.getCreatedBy().getEmail())
                 .questions(studentQuestions)
@@ -213,6 +255,12 @@ public class QuizService {
                 .chapterId(quiz.getChapter() != null ? quiz.getChapter().getId() : null)
                 .chapterTitle(quiz.getChapter() != null ? quiz.getChapter().getTitle() : null)
                 .totalMarks(quiz.getTotalMarks())
+                .quizType(quiz.getQuizType())
+                .status(quiz.getStatus())
+                .isPublished(quiz.getIsPublished())
+                .passingScorePercentage(quiz.getPassingScorePercentage())
+                .teacherPriorities(quiz.getTeacherPriorities())
+                .customInstructions(quiz.getCustomInstructions())
                 .createdById(quiz.getCreatedBy().getId())
                 .createdByEmail(quiz.getCreatedBy().getEmail())
                 .questions(teacherQuestions)

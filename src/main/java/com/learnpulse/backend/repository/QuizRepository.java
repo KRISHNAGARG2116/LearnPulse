@@ -15,4 +15,10 @@ public interface QuizRepository extends JpaRepository<Quiz, UUID> {
     List<Quiz> findByChapterId(UUID chapterId);
 
     List<Quiz> findBySubjectIdAndChapterId(UUID subjectId, UUID chapterId);
+
+    java.util.Optional<Quiz> findFirstByChapterId(UUID chapterId);
+
+    java.util.Optional<Quiz> findFirstBySubjectIdAndChapterIdIsNull(UUID subjectId);
+
+    List<Quiz> findBySubjectIdAndIsPublishedTrue(UUID subjectId);
 }

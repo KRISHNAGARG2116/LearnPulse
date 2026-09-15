@@ -27,6 +27,8 @@ public class StudentQuizResultDTO {
 
     private Integer correctAnswers;
     private Integer wrongAnswers;
+    private Boolean isPassed;
+    private Double passingScorePercentage;
 
     private Instant attemptedAt;
 }
