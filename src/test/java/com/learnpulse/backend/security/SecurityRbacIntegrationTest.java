@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -277,5 +278,65 @@ class SecurityRbacIntegrationTest {
                         .header("Authorization", "Bearer " + studentToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.status", is("error")));
+    }
+
+    @Test
+    @DisplayName("CORS Preflight and Authentication Origin Integration Test for http://localhost:3000 and http://localhost:5173")
+    void testCorsAndPreflightForAuthEndpoints() throws Exception {
+        // 1. OPTIONS preflight request to /api/auth/register from http://localhost:3000
+        mockMvc.perform(options("/api/auth/register")
+                        .header("Origin", "http://localhost:3000")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type,authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+                .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+
+        // 2. OPTIONS preflight request to /api/auth/login from http://localhost:3000
+        mockMvc.perform(options("/api/auth/login")
+                        .header("Origin", "http://localhost:3000")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"));
+
+        // 3. POST /api/auth/register from http://localhost:3000
+        RegisterRequest registerReq = RegisterRequest.builder()
+                .email("cors_3000_user@learnpulse.ai")
+                .password("Password123!")
+                .firstName("Cors")
+                .lastName("Tester")
+                .role(Role.STUDENT)
+                .build();
+
+        mockMvc.perform(post("/api/auth/register")
+                        .header("Origin", "http://localhost:3000")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerReq)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+                .andExpect(jsonPath("$.status", is("success")));
+
+        // 4. POST /api/auth/login from http://localhost:3000
+        LoginRequest loginReq = LoginRequest.builder()
+                .email("cors_3000_user@learnpulse.ai")
+                .password("Password123!")
+                .build();
+
+        mockMvc.perform(post("/api/auth/login")
+                        .header("Origin", "http://localhost:3000")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginReq)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:3000"))
+                .andExpect(jsonPath("$.status", is("success")));
+
+        // 5. Verification for http://localhost:5173 origin
+        mockMvc.perform(options("/api/auth/register")
+                        .header("Origin", "http://localhost:5173")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type,authorization"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
     }
 }
