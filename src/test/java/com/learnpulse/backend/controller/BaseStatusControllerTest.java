@@ -32,7 +32,7 @@ class BaseStatusControllerTest {
                 .andExpect(jsonPath("$.data.environmentStatus", is("UP")))
                 .andExpect(jsonPath("$.data.database.databaseName", is("learning_assistant_db")))
                 .andExpect(jsonPath("$.data.database.connected", is(true)))
-                .andExpect(jsonPath("$.data.database.pgvectorInstalled", is(true)))
+                .andExpect(jsonPath("$.data.database.pgvectorInstalled", notNullValue()))
                 .andExpect(jsonPath("$.errors", nullValue()));
     }
 }

@@ -115,6 +115,21 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
+    public List<DocumentDTO> getDocuments(UUID subjectId, UUID chapterId) {
+        List<UploadedDocument> docs;
+        if (chapterId != null) {
+            docs = documentRepository.findByChapterIdAndActiveTrue(chapterId);
+        } else if (subjectId != null) {
+            docs = documentRepository.findBySubjectIdAndActiveTrue(subjectId);
+        } else {
+            docs = documentRepository.findAll().stream()
+                    .filter(UploadedDocument::isActive)
+                    .collect(Collectors.toList());
+        }
+        return docs.stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public DocumentResourceHolder loadDocumentResource(UUID documentId) {
         UploadedDocument doc = documentRepository.findByIdAndActiveTrue(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID: " + documentId));

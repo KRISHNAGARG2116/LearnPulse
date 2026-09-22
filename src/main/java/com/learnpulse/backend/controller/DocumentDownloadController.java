@@ -1,5 +1,7 @@
 package com.learnpulse.backend.controller;
 
+import com.learnpulse.backend.dto.ApiResponse;
+import com.learnpulse.backend.dto.DocumentDTO;
 import com.learnpulse.backend.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,15 +13,34 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
-@Tag(name = "Document Retrieval Engine", description = "REST APIs for secure document download and streaming")
+@Tag(name = "Document Retrieval Engine", description = "REST APIs for secure document listing, download, and streaming")
 public class DocumentDownloadController {
 
     private final DocumentService documentService;
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "List Uploaded Educational Documents", description = "Retrieves a list of uploaded documents, optionally filtered by subject ID and/or chapter ID")
+    public ResponseEntity<ApiResponse<List<DocumentDTO>>> getDocuments(
+            @RequestParam(required = false) UUID subjectId,
+            @RequestParam(required = false) UUID chapterId) {
+        List<DocumentDTO> documents = documentService.getDocuments(subjectId, chapterId);
+        return ResponseEntity.ok(ApiResponse.success("Documents retrieved successfully", documents));
+    }
+
+    @GetMapping("/{documentId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get Document Metadata by ID", description = "Retrieves metadata of a specific uploaded document")
+    public ResponseEntity<ApiResponse<DocumentDTO>> getDocumentById(@PathVariable UUID documentId) {
+        DocumentDTO document = documentService.getDocumentById(documentId);
+        return ResponseEntity.ok(ApiResponse.success("Document metadata retrieved successfully", document));
+    }
 
     @GetMapping("/{documentId}/download")
     @PreAuthorize("isAuthenticated()")

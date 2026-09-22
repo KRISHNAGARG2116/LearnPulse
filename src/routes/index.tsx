@@ -6,8 +6,12 @@ import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 
 import { StudentDashboardPage } from '../pages/student/StudentDashboardPage';
-import { StudentPracticePage } from '../pages/student/StudentPracticePage';
-import { StudentResultsPage } from '../pages/student/StudentResultsPage';
+import { StudentSubjectCatalogPage } from '../pages/student/StudentSubjectCatalogPage';
+import { StudentChapterListPage } from '../pages/student/StudentChapterListPage';
+import { StudentMaterialViewerPage } from '../pages/student/StudentMaterialViewerPage';
+import { StudentQuizExecutionPage } from '../pages/student/StudentQuizExecutionPage';
+import { StudentQuizResultPage } from '../pages/student/StudentQuizResultPage';
+import { StudentProgressPage } from '../pages/student/StudentProgressPage';
 import { StudentProfilePage } from '../pages/student/StudentProfilePage';
 
 import { TeacherDashboardPage } from '../pages/teacher/TeacherDashboardPage';
@@ -32,8 +36,14 @@ export const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute allowedRoles={['STUDENT']} />}>
         <Route element={<MainLayout />}>
           <Route path="/student/dashboard" element={<StudentDashboardPage />} />
-          <Route path="/student/practice" element={<StudentPracticePage />} />
-          <Route path="/student/results" element={<StudentResultsPage />} />
+          <Route path="/student/subjects" element={<StudentSubjectCatalogPage />} />
+          <Route path="/student/subjects/:subjectId/chapters" element={<StudentChapterListPage />} />
+          <Route path="/student/chapters/:chapterId/materials" element={<StudentMaterialViewerPage />} />
+          <Route path="/student/quiz/:quizId" element={<StudentQuizExecutionPage />} />
+          <Route path="/student/quiz/result/:resultId" element={<StudentQuizResultPage />} />
+          <Route path="/student/progress" element={<StudentProgressPage />} />
+          <Route path="/student/practice" element={<StudentSubjectCatalogPage />} />
+          <Route path="/student/results" element={<StudentProgressPage />} />
           <Route path="/student/profile" element={<StudentProfilePage />} />
         </Route>
       </Route>

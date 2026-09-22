@@ -56,6 +56,12 @@ public class CourseProgressionIntegrationTest {
     private StudentQuizResultRepository studentQuizResultRepository;
 
     @Autowired
+    private UploadedDocumentRepository documentRepository;
+
+    @Autowired
+    private NotesRepository notesRepository;
+
+    @Autowired
     private JwtProvider jwtProvider;
 
     @Autowired
@@ -74,6 +80,8 @@ public class CourseProgressionIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        notesRepository.deleteAll();
+        documentRepository.deleteAll();
         studentQuizResultRepository.deleteAll();
         questionRepository.deleteAll();
         quizRepository.deleteAll();
@@ -86,7 +94,7 @@ public class CourseProgressionIntegrationTest {
                 .password(passwordEncoder.encode("Pass123!"))
                 .role(Role.TEACHER)
                 .build();
-        teacher = userRepository.save(teacher);
+        teacher = userRepository.saveAndFlush(teacher);
         teacherToken = jwtProvider.generateAccessToken(teacher);
 
         student = User.builder()
@@ -94,7 +102,7 @@ public class CourseProgressionIntegrationTest {
                 .password(passwordEncoder.encode("Pass123!"))
                 .role(Role.STUDENT)
                 .build();
-        student = userRepository.save(student);
+        student = userRepository.saveAndFlush(student);
         studentToken = jwtProvider.generateAccessToken(student);
 
         // Setup Course: Java Programming
