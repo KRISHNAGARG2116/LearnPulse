@@ -7,6 +7,14 @@ spring:
   application:
     name: learning-assistant
 
+  ai:
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        options:
+          model: ${OLLAMA_MODEL:qwen2.5-coder:7b}
+          temperature: ${OLLAMA_TEMPERATURE:0.7}
+
   servlet:
     multipart:
       max-file-size: 20MB
