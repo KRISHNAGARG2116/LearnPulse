@@ -7,6 +7,9 @@ spring:
   application:
     name: learning-assistant
 
+  main:
+    allow-bean-definition-overriding: true
+
   ai:
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
@@ -14,6 +17,17 @@ spring:
         options:
           model: ${OLLAMA_MODEL:qwen2.5-coder:7b}
           temperature: ${OLLAMA_TEMPERATURE:0.7}
+      embedding:
+        options:
+          model: ${OLLAMA_EMBEDDING_MODEL:nomic-embed-text:latest}
+    vectorstore:
+      pgvector:
+        dimensions: 768
+        distance-type: COSINE_DISTANCE
+
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.autoconfigure.vectorstore.pgvector.PgVectorStoreAutoConfiguration
 
   servlet:
     multipart:
@@ -40,6 +54,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+rag:
+  chunk-size: ${RAG_CHUNK_SIZE:800}
+  chunk-overlap: ${RAG_CHUNK_OVERLAP:100}
+  min-chunk-size: ${RAG_MIN_CHUNK_SIZE:20}
+  top-k: ${RAG_TOP_K:4}
+  similarity-threshold: ${RAG_SIMILARITY_THRESHOLD:0.5}
 
 springdoc:
   api-docs:

@@ -55,6 +55,11 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-ollama-spring-boot-starter</artifactId>
         </dependency>
+        <!-- Spring AI PgVectorStore Starter -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+        </dependency>
         <!-- JJWT Dependencies (Day 14 Required) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

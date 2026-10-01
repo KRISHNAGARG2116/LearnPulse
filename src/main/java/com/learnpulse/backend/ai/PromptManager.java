@@ -60,6 +60,43 @@ public class PromptManager {
         return new Prompt(messages);
     }
 
+    private static final String RAG_SYSTEM_PROMPT = """
+            You are a precise educational AI assistant for the LearnPulse learning platform.
+            Answer the student's question using ONLY the provided document context below.
+            
+            Strict Guidelines:
+            1. Base your answer strictly on the facts present in the provided Document Context.
+            2. Do not invent, extrapolate, or use outside knowledge that is not directly supported by the context.
+            3. Keep your explanation clear, educational, concise, and well-structured.
+            4. If the provided context does not contain sufficient information to answer the question, state clearly: "The requested information could not be found in the provided document."
+            """;
+
+    /**
+     * Builds a RAG prompt ensuring answer generation is strictly grounded in retrieved document context.
+     *
+     * @param contextText Retrieved document chunk context text
+     * @param studentQuestion Student natural language question
+     * @return Spring AI Prompt object with SystemMessage and UserMessage containing context & question
+     */
+    public Prompt buildRagPrompt(String contextText, String studentQuestion) {
+        if (!StringUtils.hasText(studentQuestion)) {
+            throw new IllegalArgumentException("Student question cannot be null or empty for RAG prompt.");
+        }
+
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(RAG_SYSTEM_PROMPT));
+
+        StringBuilder userMessageBuilder = new StringBuilder();
+        userMessageBuilder.append("Document Context:\n-----------------\n");
+        userMessageBuilder.append(StringUtils.hasText(contextText) ? contextText.trim() : "[No Relevant Document Context Provided]");
+        userMessageBuilder.append("\n-----------------\n\nStudent Question:\n");
+        userMessageBuilder.append(studentQuestion.trim());
+        userMessageBuilder.append("\n\nProvide a clear and accurate document-grounded answer:");
+
+        messages.add(new UserMessage(userMessageBuilder.toString()));
+        return new Prompt(messages);
+    }
+
     /**
      * Helper to create an AssistantMessage for chat history turns.
      */
