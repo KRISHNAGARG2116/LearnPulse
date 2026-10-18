@@ -34,9 +34,11 @@ public class ChapterController {
     }
 
     @GetMapping("/api/subjects/{subjectId}/chapters")
-    @Operation(summary = "List Chapters for Subject", description = "Retrieves all chapters associated with a parent subject ordered by chapter number")
-    public ResponseEntity<ApiResponse<List<ChapterDTO>>> getChaptersBySubject(@PathVariable UUID subjectId) {
-        List<ChapterDTO> chapters = chapterService.getChaptersBySubject(subjectId);
+    @Operation(summary = "List Chapters for Subject", description = "Retrieves all chapters associated with a parent subject ordered by chapter number (Requires active enrollment for students)")
+    public ResponseEntity<ApiResponse<List<ChapterDTO>>> getChaptersBySubject(
+            @PathVariable UUID subjectId,
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.learnpulse.backend.entity.User requester) {
+        List<ChapterDTO> chapters = chapterService.getChaptersBySubject(subjectId, requester);
         return ResponseEntity.ok(ApiResponse.success("Chapters retrieved successfully", chapters));
     }
 

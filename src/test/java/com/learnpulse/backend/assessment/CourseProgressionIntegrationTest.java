@@ -62,6 +62,12 @@ public class CourseProgressionIntegrationTest {
     private NotesRepository notesRepository;
 
     @Autowired
+    private StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private TeacherSubjectRepository teacherSubjectRepository;
+
+    @Autowired
     private JwtProvider jwtProvider;
 
     @Autowired
@@ -85,6 +91,8 @@ public class CourseProgressionIntegrationTest {
         studentQuizResultRepository.deleteAll();
         questionRepository.deleteAll();
         quizRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         chapterRepository.deleteAll();
         subjectRepository.deleteAll();
         userRepository.deleteAll();
@@ -112,6 +120,17 @@ public class CourseProgressionIntegrationTest {
                 .description("Complete Java Course")
                 .build();
         subject = subjectRepository.save(subject);
+
+        teacherSubjectRepository.save(TeacherSubject.builder()
+                .teacher(teacher)
+                .subject(subject)
+                .build());
+
+        studentEnrollmentRepository.save(StudentEnrollment.builder()
+                .student(student)
+                .subject(subject)
+                .status(EnrollmentStatus.ACTIVE)
+                .build());
 
         chapter1 = Chapter.builder()
                 .subject(subject)
@@ -362,6 +381,12 @@ public class CourseProgressionIntegrationTest {
         Quiz q3 = createQuizWithQuestions("Matplotlib Quiz", multiSub, c3, QuizType.CHAPTER_QUIZ, 10, 80.0, true);
         Quiz fQuiz = createQuizWithQuestions("Final Python Assessment", multiSub, null, QuizType.FINAL_COURSE_QUIZ, 25, 75.0, true);
 
+        studentEnrollmentRepository.save(StudentEnrollment.builder()
+                .student(student)
+                .subject(multiSub)
+                .status(EnrollmentStatus.ACTIVE)
+                .build());
+
         // Pass Chapter 1 & Chapter 2, leave Chapter 3 unattempted
         submitFullScoreQuiz(q1.getId(), q1.getQuestions());
         submitFullScoreQuiz(q2.getId(), q2.getQuestions());
@@ -406,6 +431,12 @@ public class CourseProgressionIntegrationTest {
         Quiz q2 = createQuizWithQuestions("Tree Quiz", multiSub, c2, QuizType.CHAPTER_QUIZ, 10, 80.0, true);
         Quiz q3 = createQuizWithQuestions("Neural Quiz", multiSub, c3, QuizType.CHAPTER_QUIZ, 10, 80.0, true);
         Quiz fQuiz = createQuizWithQuestions("Final ML Assessment", multiSub, null, QuizType.FINAL_COURSE_QUIZ, 25, 75.0, true);
+
+        studentEnrollmentRepository.save(StudentEnrollment.builder()
+                .student(student)
+                .subject(multiSub)
+                .status(EnrollmentStatus.ACTIVE)
+                .build());
 
         // Pass ALL 3 chapter quizzes
         submitFullScoreQuiz(q1.getId(), q1.getQuestions());

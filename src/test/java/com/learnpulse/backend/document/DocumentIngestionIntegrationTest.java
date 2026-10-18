@@ -78,6 +78,12 @@ class DocumentIngestionIntegrationTest {
     @Autowired
     private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
 
+    @Autowired
+    private com.learnpulse.backend.repository.StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.TeacherSubjectRepository teacherSubjectRepository;
+
     @BeforeEach
     void setUp() {
         resultRepository.deleteAll();
@@ -85,6 +91,8 @@ class DocumentIngestionIntegrationTest {
         quizRepository.deleteAll();
         notesRepository.deleteAll();
         documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         chapterRepository.deleteAll();
         subjectRepository.deleteAll();
         userProfileRepository.deleteAll();
@@ -115,6 +123,12 @@ class DocumentIngestionIntegrationTest {
                 .chapterNumber(1)
                 .description("HTTP/1.1, HTTP/2, and TLS Security")
                 .subject(subject)
+                .build());
+
+        studentEnrollmentRepository.save(com.learnpulse.backend.entity.StudentEnrollment.builder()
+                .student(student)
+                .subject(subject)
+                .status(com.learnpulse.backend.entity.EnrollmentStatus.ACTIVE)
                 .build());
     }
 

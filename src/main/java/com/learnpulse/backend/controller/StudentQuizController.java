@@ -30,10 +30,11 @@ public class StudentQuizController {
     @GetMapping("/api/quizzes")
     @Operation(summary = "List available quizzes", description = "Retrieves available quizzes, optionally filtered by subject ID and/or chapter ID. Correct answers are strictly hidden.")
     public ResponseEntity<ApiResponse<List<StudentQuizDTO>>> getQuizzes(
+            @AuthenticationPrincipal User requester,
             @RequestParam(required = false) UUID subjectId,
             @RequestParam(required = false) UUID chapterId) {
 
-        List<StudentQuizDTO> quizzes = quizService.getQuizzesForStudent(subjectId, chapterId);
+        List<StudentQuizDTO> quizzes = quizService.getQuizzesForStudent(requester, subjectId, chapterId);
         return ResponseEntity.ok(ApiResponse.success("Quizzes retrieved successfully", quizzes));
     }
 

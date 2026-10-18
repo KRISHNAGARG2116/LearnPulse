@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { getStudentProgress, getSubjects } from '../../api/lmsApi';
-import { StudentProgressDTO, SubjectDTO } from '../../types/lms';
+import { getStudentProgress, getStudentEnrolledSubjects } from '../../api/lmsApi';
+import { StudentProgressDTO, EnrolledSubjectDTO } from '../../types/lms';
 import {
   Sparkles,
   BookOpen,
@@ -14,12 +14,13 @@ import {
   Clock,
   Layers,
   CheckCircle2,
+  UserCheck,
 } from 'lucide-react';
 
 export const StudentDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [progress, setProgress] = useState<StudentProgressDTO | null>(null);
-  const [subjects, setSubjects] = useState<SubjectDTO[]>([]);
+  const [enrolledSubjects, setEnrolledSubjects] = useState<EnrolledSubjectDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,12 +29,12 @@ export const StudentDashboardPage: React.FC = () => {
       setLoading(true);
       setError(null);
       try {
-        const [progressData, subjectsData] = await Promise.all([
+        const [progressData, enrolledData] = await Promise.all([
           getStudentProgress().catch(() => null),
-          getSubjects().catch(() => []),
+          getStudentEnrolledSubjects().catch(() => []),
         ]);
         setProgress(progressData);
-        setSubjects(subjectsData);
+        setEnrolledSubjects(enrolledData);
       } catch (err: any) {
         setError(err.message || 'Failed to load dashboard data. Please try again.');
       } finally {
@@ -141,55 +142,75 @@ export const StudentDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Available Subjects Grid */}
+      {/* Enrolled Subjects Grid */}
       <div className="glass-panel rounded-2xl p-6 border border-slate-800 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-indigo-400" />
-            <span>Academic Subjects</span>
+            <span>My Enrolled Subjects</span>
+            {enrolledSubjects.length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold">
+                {enrolledSubjects.length}
+              </span>
+            )}
           </h2>
           <Link
             to="/student/subjects"
             className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1"
           >
-            <span>View All</span>
+            <span>Subject Catalog</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {subjects.length === 0 ? (
+        {enrolledSubjects.length === 0 ? (
           <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl space-y-2">
             <BookOpen className="w-8 h-8 text-slate-600 mx-auto" />
-            <p className="text-slate-400 text-sm font-medium">No subjects available yet.</p>
-            <p className="text-slate-500 text-xs">Check back later when teachers publish academic subjects.</p>
+            <p className="text-slate-400 text-sm font-medium">No enrolled subjects yet.</p>
+            <p className="text-slate-500 text-xs">Browse the catalog to view subjects or ask your instructor to enroll you.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {subjects.map((sub) => (
-              <Link
-                key={sub.id}
-                to={`/student/subjects/${sub.id}/chapters`}
-                className="p-5 rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900 hover:border-indigo-500/40 transition-all group flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-mono font-bold">
-                      {sub.code}
-                    </span>
+            {enrolledSubjects.map((sub) => {
+              const teacherName = sub.teacherFirstName
+                ? `Prof. ${sub.teacherFirstName} ${sub.teacherLastName || ''}`
+                : null;
+              return (
+                <Link
+                  key={sub.subjectId}
+                  to={`/student/subjects/${sub.subjectId}/chapters`}
+                  className="p-5 rounded-xl border border-emerald-500/30 bg-emerald-950/10 hover:bg-emerald-950/20 hover:border-emerald-500/50 transition-all group flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="px-2.5 py-1 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs font-mono font-bold">
+                        {sub.subjectCode}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Enrolled</span>
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-white group-hover:text-emerald-300 transition-colors">
+                      {sub.subjectName}
+                    </h3>
+                    {teacherName && (
+                      <p className="text-xs text-indigo-300 font-medium mt-1 flex items-center gap-1">
+                        <UserCheck className="w-3 h-3" />
+                        <span>{teacherName}</span>
+                      </p>
+                    )}
+                    {sub.subjectDescription && (
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">{sub.subjectDescription}</p>
+                    )}
                   </div>
-                  <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors">
-                    {sub.name}
-                  </h3>
-                  {sub.description && (
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-2">{sub.description}</p>
-                  )}
-                </div>
-                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-indigo-400">
-                  <span>Explore Chapters & Materials</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Link>
-            ))}
+                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-semibold text-emerald-400">
+                    <span>{sub.chapterCount} {sub.chapterCount === 1 ? 'Chapter' : 'Chapters'} Available</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

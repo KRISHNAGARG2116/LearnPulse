@@ -21,6 +21,7 @@ public class CourseProgressionService {
     private final ChapterRepository chapterRepository;
     private final QuizRepository quizRepository;
     private final StudentQuizResultRepository resultRepository;
+    private final EnrollmentService enrollmentService;
 
     @Transactional(readOnly = true)
     public CourseProgressionDTO getCourseProgression(User student, UUID courseId) {
@@ -30,6 +31,12 @@ public class CourseProgressionService {
 
         Subject course = subjectRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found with ID: " + courseId));
+
+        if (student.getRole() == Role.STUDENT) {
+            if (!enrollmentService.isStudentActivelyEnrolled(student.getId(), course.getId())) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in this course", HttpStatus.FORBIDDEN);
+            }
+        }
 
         List<Chapter> chapters = chapterRepository.findBySubjectIdOrderByChapterNumberAsc(course.getId());
 
@@ -131,7 +138,16 @@ public class CourseProgressionService {
             }
         }
 
-        // 2. Progression lock check for students
+        // 2. Enrollment check for students
+        if (student.getRole() == Role.STUDENT) {
+            UUID subjectId = quiz.getSubject() != null ? quiz.getSubject().getId() :
+                    (quiz.getChapter() != null && quiz.getChapter().getSubject() != null ? quiz.getChapter().getSubject().getId() : null);
+            if (subjectId != null && !enrollmentService.isStudentActivelyEnrolled(student.getId(), subjectId)) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in the subject for this quiz", HttpStatus.FORBIDDEN);
+            }
+        }
+
+        // 3. Progression lock check for students
         if (student.getRole() == Role.STUDENT) {
             if (quiz.getQuizType() == QuizType.CHAPTER_QUIZ && quiz.getChapter() != null) {
                 Chapter currentChapter = quiz.getChapter();

@@ -38,6 +38,27 @@ class DocumentRetrievalIntegrationTest {
     private UploadedDocumentRepository documentRepository;
 
     @Autowired
+    private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.QuestionRepository questionRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.QuizRepository quizRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.NotesRepository notesRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.TeacherSubjectRepository teacherSubjectRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -51,9 +72,16 @@ class DocumentRetrievalIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        resultRepository.deleteAll();
+        questionRepository.deleteAll();
+        quizRepository.deleteAll();
+        notesRepository.deleteAll();
         documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         chapterRepository.deleteAll();
         subjectRepository.deleteAll();
+        userProfileRepository.deleteAll();
         userRepository.deleteAll();
 
         student = userRepository.save(User.builder()
@@ -72,6 +100,12 @@ class DocumentRetrievalIntegrationTest {
         subject = subjectRepository.save(Subject.builder()
                 .name("Database Systems")
                 .code("DBMS301")
+                .build());
+
+        studentEnrollmentRepository.save(com.learnpulse.backend.entity.StudentEnrollment.builder()
+                .student(student)
+                .subject(subject)
+                .status(com.learnpulse.backend.entity.EnrollmentStatus.ACTIVE)
                 .build());
 
         chapter = chapterRepository.save(Chapter.builder()

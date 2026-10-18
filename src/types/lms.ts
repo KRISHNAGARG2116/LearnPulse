@@ -134,3 +134,59 @@ export interface CreateQuizRequest {
   passingScorePercentage?: number;
   questions: CreateQuestionRequest[];
 }
+
+export type EnrollmentStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface TeacherSubjectDTO {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  subjectDescription?: string;
+  chapterCount: number;
+  assignedAt: string;
+}
+
+export interface EnrolledSubjectDTO {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  subjectDescription?: string;
+  chapterCount: number;
+  status: EnrollmentStatus;
+  enrolledAt: string;
+  teacherFirstName?: string;
+  teacherLastName?: string;
+  teacherEmail?: string;
+}
+
+export interface StudentSummaryDTO {
+  userId: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  department?: string;
+  enrollmentNumber?: string;
+  enrolledAt?: string;
+  status?: EnrollmentStatus;
+}
+
+export interface EnrollmentDTO {
+  id: string;
+  studentId: string;
+  studentEmail: string;
+  studentFirstName?: string;
+  studentLastName?: string;
+  enrollmentNumber?: string;
+  subjectId: string;
+  subjectName: string;
+  status: EnrollmentStatus;
+  enrolledAt: string;
+}
+
+export interface AssignTeacherRequest {
+  teacherId: string;
+}
+
+export interface EnrollStudentRequest {
+  studentId: string;
+}

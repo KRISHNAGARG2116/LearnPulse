@@ -66,6 +66,12 @@ class SecurityRbacIntegrationTest {
     @Autowired
     private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
 
+    @Autowired
+    private com.learnpulse.backend.repository.StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.TeacherSubjectRepository teacherSubjectRepository;
+
     @BeforeEach
     void cleanUp() {
         resultRepository.deleteAll();
@@ -73,6 +79,8 @@ class SecurityRbacIntegrationTest {
         quizRepository.deleteAll();
         notesRepository.deleteAll();
         documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         userProfileRepository.deleteAll();
         userRepository.deleteAll();
     }

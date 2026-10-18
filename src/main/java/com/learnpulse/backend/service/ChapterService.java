@@ -25,6 +25,7 @@ public class ChapterService {
 
     private final ChapterRepository chapterRepository;
     private final SubjectRepository subjectRepository;
+    private final EnrollmentService enrollmentService;
 
     @Transactional
     public ChapterDTO createChapter(UUID subjectId, CreateChapterRequest request) {
@@ -49,14 +50,25 @@ public class ChapterService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChapterDTO> getChaptersBySubject(UUID subjectId) {
+    public List<ChapterDTO> getChaptersBySubject(UUID subjectId, com.learnpulse.backend.entity.User requester) {
         if (!subjectRepository.existsById(subjectId)) {
             throw new ResourceNotFoundException("Subject not found with ID: " + subjectId);
+        }
+
+        if (requester != null && requester.getRole() == com.learnpulse.backend.entity.Role.STUDENT) {
+            if (!enrollmentService.isStudentActivelyEnrolled(requester.getId(), subjectId)) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in this subject", HttpStatus.FORBIDDEN);
+            }
         }
 
         return chapterRepository.findBySubjectIdOrderByChapterNumberAsc(subjectId).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChapterDTO> getChaptersBySubject(UUID subjectId) {
+        return getChaptersBySubject(subjectId, null);
     }
 
     @Transactional(readOnly = true)

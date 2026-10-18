@@ -16,6 +16,7 @@ import { StudentProfilePage } from '../pages/student/StudentProfilePage';
 
 import { TeacherDashboardPage } from '../pages/teacher/TeacherDashboardPage';
 import { TeacherQuestionsPage } from '../pages/teacher/TeacherQuestionsPage';
+import { TeacherStudentsPage } from '../pages/teacher/TeacherStudentsPage';
 
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
@@ -54,7 +55,7 @@ export const AppRoutes: React.FC = () => {
           <Route path="/teacher/dashboard" element={<TeacherDashboardPage />} />
           <Route path="/teacher/questions" element={<TeacherQuestionsPage />} />
           <Route path="/teacher/content" element={<TeacherDashboardPage />} />
-          <Route path="/teacher/students" element={<TeacherDashboardPage />} />
+          <Route path="/teacher/students" element={<TeacherStudentsPage />} />
           <Route path="/teacher/profile" element={<StudentProfilePage />} />
         </Route>
       </Route>

@@ -28,25 +28,30 @@ public class DocumentDownloadController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List Uploaded Educational Documents", description = "Retrieves a list of uploaded documents, optionally filtered by subject ID and/or chapter ID")
     public ResponseEntity<ApiResponse<List<DocumentDTO>>> getDocuments(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.learnpulse.backend.entity.User requester,
             @RequestParam(required = false) UUID subjectId,
             @RequestParam(required = false) UUID chapterId) {
-        List<DocumentDTO> documents = documentService.getDocuments(subjectId, chapterId);
+        List<DocumentDTO> documents = documentService.getDocuments(requester, subjectId, chapterId);
         return ResponseEntity.ok(ApiResponse.success("Documents retrieved successfully", documents));
     }
 
     @GetMapping("/{documentId}")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get Document Metadata by ID", description = "Retrieves metadata of a specific uploaded document")
-    public ResponseEntity<ApiResponse<DocumentDTO>> getDocumentById(@PathVariable UUID documentId) {
-        DocumentDTO document = documentService.getDocumentById(documentId);
+    public ResponseEntity<ApiResponse<DocumentDTO>> getDocumentById(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.learnpulse.backend.entity.User requester,
+            @PathVariable UUID documentId) {
+        DocumentDTO document = documentService.getDocumentById(requester, documentId);
         return ResponseEntity.ok(ApiResponse.success("Document metadata retrieved successfully", document));
     }
 
     @GetMapping("/{documentId}/download")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Download Document", description = "Downloads an uploaded educational document as an attachment")
-    public ResponseEntity<Resource> downloadDocument(@PathVariable UUID documentId) {
-        DocumentService.DocumentResourceHolder holder = documentService.loadDocumentResource(documentId);
+    public ResponseEntity<Resource> downloadDocument(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.learnpulse.backend.entity.User requester,
+            @PathVariable UUID documentId) {
+        DocumentService.DocumentResourceHolder holder = documentService.loadDocumentResource(requester, documentId);
 
         String contentType = holder.contentType();
         if (contentType == null || contentType.isBlank()) {
@@ -62,8 +67,10 @@ public class DocumentDownloadController {
     @GetMapping("/{documentId}/stream")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Stream Document", description = "Streams an uploaded educational document inline (e.g. for PDF viewer)")
-    public ResponseEntity<Resource> streamDocument(@PathVariable UUID documentId) {
-        DocumentService.DocumentResourceHolder holder = documentService.loadDocumentResource(documentId);
+    public ResponseEntity<Resource> streamDocument(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.learnpulse.backend.entity.User requester,
+            @PathVariable UUID documentId) {
+        DocumentService.DocumentResourceHolder holder = documentService.loadDocumentResource(requester, documentId);
 
         String contentType = holder.contentType();
         if (contentType == null || contentType.isBlank()) {

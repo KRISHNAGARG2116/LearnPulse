@@ -55,6 +55,7 @@ class AcademicHierarchyIntegrationTest {
     private String adminToken;
     private String teacherToken;
     private String studentToken;
+    private User studentUser;
 
     @Autowired
     private com.learnpulse.backend.repository.QuizRepository quizRepository;
@@ -65,13 +66,33 @@ class AcademicHierarchyIntegrationTest {
     @Autowired
     private com.learnpulse.backend.repository.StudentQuizResultRepository resultRepository;
 
+    @Autowired
+    private com.learnpulse.backend.repository.UserProfileRepository userProfileRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.TeacherSubjectRepository teacherSubjectRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.UploadedDocumentRepository documentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.NotesRepository notesRepository;
+
     @BeforeEach
     void setUp() {
         resultRepository.deleteAll();
         questionRepository.deleteAll();
         quizRepository.deleteAll();
+        notesRepository.deleteAll();
+        documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         chapterRepository.deleteAll();
         subjectRepository.deleteAll();
+        userProfileRepository.deleteAll();
         userRepository.deleteAll();
 
         User adminUser = userRepository.save(User.builder()
@@ -88,7 +109,7 @@ class AcademicHierarchyIntegrationTest {
                 .build());
         teacherToken = jwtProvider.generateAccessToken(teacherUser);
 
-        User studentUser = userRepository.save(User.builder()
+        studentUser = userRepository.save(User.builder()
                 .email("student_acad@learnpulse.ai")
                 .password(passwordEncoder.encode("StudentPass123!"))
                 .role(Role.STUDENT)
@@ -210,6 +231,13 @@ class AcademicHierarchyIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createChapter2)))
                 .andExpect(status().isCreated());
+
+        // Enroll student in subject
+        studentEnrollmentRepository.save(com.learnpulse.backend.entity.StudentEnrollment.builder()
+                .student(studentUser)
+                .subject(subjectRepository.findById(subjectId).orElseThrow())
+                .status(com.learnpulse.backend.entity.EnrollmentStatus.ACTIVE)
+                .build());
 
         // 3. List Chapters for Subject
         mockMvc.perform(get("/api/subjects/" + subjectId + "/chapters")

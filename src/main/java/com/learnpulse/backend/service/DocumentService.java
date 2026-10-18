@@ -30,6 +30,7 @@ public class DocumentService {
     private final UploadedDocumentRepository documentRepository;
     private final SubjectRepository subjectRepository;
     private final ChapterRepository chapterRepository;
+    private final EnrollmentService enrollmentService;
 
     public record DocumentResourceHolder(
             Resource resource,
@@ -103,10 +104,22 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public DocumentDTO getDocumentById(UUID documentId) {
+    public DocumentDTO getDocumentById(User requester, UUID documentId) {
         UploadedDocument doc = documentRepository.findByIdAndActiveTrue(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID: " + documentId));
+
+        if (requester != null && requester.getRole() == Role.STUDENT && doc.getSubject() != null) {
+            if (!enrollmentService.isStudentActivelyEnrolled(requester.getId(), doc.getSubject().getId())) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in the subject of this document", HttpStatus.FORBIDDEN);
+            }
+        }
+
         return mapToDTO(doc);
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentDTO getDocumentById(UUID documentId) {
+        return getDocumentById(null, documentId);
     }
 
     @Transactional(readOnly = true)
@@ -115,7 +128,20 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public List<DocumentDTO> getDocuments(UUID subjectId, UUID chapterId) {
+    public List<DocumentDTO> getDocuments(User requester, UUID subjectId, UUID chapterId) {
+        if (requester != null && requester.getRole() == Role.STUDENT) {
+            if (subjectId != null && !enrollmentService.isStudentActivelyEnrolled(requester.getId(), subjectId)) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in this subject", HttpStatus.FORBIDDEN);
+            }
+            if (chapterId != null) {
+                Chapter ch = chapterRepository.findById(chapterId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Chapter not found with ID: " + chapterId));
+                if (!enrollmentService.isStudentActivelyEnrolled(requester.getId(), ch.getSubject().getId())) {
+                    throw new ApiException("Access Denied: Student is not actively enrolled in this chapter's subject", HttpStatus.FORBIDDEN);
+                }
+            }
+        }
+
         List<UploadedDocument> docs;
         if (chapterId != null) {
             docs = documentRepository.findByChapterIdAndActiveTrue(chapterId);
@@ -130,9 +156,20 @@ public class DocumentService {
     }
 
     @Transactional(readOnly = true)
-    public DocumentResourceHolder loadDocumentResource(UUID documentId) {
+    public List<DocumentDTO> getDocuments(UUID subjectId, UUID chapterId) {
+        return getDocuments(null, subjectId, chapterId);
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentResourceHolder loadDocumentResource(User requester, UUID documentId) {
         UploadedDocument doc = documentRepository.findByIdAndActiveTrue(documentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found with ID: " + documentId));
+
+        if (requester != null && requester.getRole() == Role.STUDENT && doc.getSubject() != null) {
+            if (!enrollmentService.isStudentActivelyEnrolled(requester.getId(), doc.getSubject().getId())) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in the subject of this document", HttpStatus.FORBIDDEN);
+            }
+        }
 
         Resource resource = fileStorageService.loadFileAsResource(doc.getStoredFileName());
 
@@ -141,6 +178,11 @@ public class DocumentService {
                 doc.getOriginalFileName(),
                 doc.getContentType()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public DocumentResourceHolder loadDocumentResource(UUID documentId) {
+        return loadDocumentResource(null, documentId);
     }
 
     public DocumentDTO mapToDTO(UploadedDocument doc) {

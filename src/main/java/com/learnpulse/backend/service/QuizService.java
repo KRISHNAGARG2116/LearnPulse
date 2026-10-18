@@ -29,6 +29,7 @@ public class QuizService {
     private final SubjectRepository subjectRepository;
     private final ChapterRepository chapterRepository;
     private final CourseProgressionService courseProgressionService;
+    private final EnrollmentService enrollmentService;
 
     @Transactional
     public TeacherQuizDTO createQuiz(User creator, CreateQuizRequest request) {
@@ -162,7 +163,20 @@ public class QuizService {
     }
 
     @Transactional(readOnly = true)
-    public List<StudentQuizDTO> getQuizzesForStudent(UUID subjectId, UUID chapterId) {
+    public List<StudentQuizDTO> getQuizzesForStudent(User requester, UUID subjectId, UUID chapterId) {
+        if (requester != null && requester.getRole() == Role.STUDENT) {
+            if (subjectId != null && !enrollmentService.isStudentActivelyEnrolled(requester.getId(), subjectId)) {
+                throw new ApiException("Access Denied: Student is not actively enrolled in this subject", HttpStatus.FORBIDDEN);
+            }
+            if (chapterId != null) {
+                Chapter ch = chapterRepository.findById(chapterId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Chapter not found with ID: " + chapterId));
+                if (!enrollmentService.isStudentActivelyEnrolled(requester.getId(), ch.getSubject().getId())) {
+                    throw new ApiException("Access Denied: Student is not actively enrolled in this chapter's subject", HttpStatus.FORBIDDEN);
+                }
+            }
+        }
+
         List<Quiz> quizzes;
         if (subjectId != null && chapterId != null) {
             quizzes = quizRepository.findBySubjectIdAndChapterId(subjectId, chapterId);
@@ -178,6 +192,11 @@ public class QuizService {
                 .filter(q -> Boolean.TRUE.equals(q.getIsPublished()) && q.getStatus() == QuizStatus.PUBLISHED)
                 .map(this::mapToStudentDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<StudentQuizDTO> getQuizzesForStudent(UUID subjectId, UUID chapterId) {
+        return getQuizzesForStudent(null, subjectId, chapterId);
     }
 
     @Transactional(readOnly = true)

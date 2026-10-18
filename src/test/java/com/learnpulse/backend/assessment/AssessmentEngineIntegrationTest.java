@@ -59,6 +59,12 @@ class AssessmentEngineIntegrationTest {
     private NotesRepository notesRepository;
 
     @Autowired
+    private StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private TeacherSubjectRepository teacherSubjectRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -84,6 +90,8 @@ class AssessmentEngineIntegrationTest {
         quizRepository.deleteAll();
         notesRepository.deleteAll();
         documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         chapterRepository.deleteAll();
         subjectRepository.deleteAll();
         userProfileRepository.deleteAll();
@@ -121,6 +129,17 @@ class AssessmentEngineIntegrationTest {
                 .chapterNumber(1)
                 .description("Creational, Structural, and Behavioral Patterns")
                 .subject(subject)
+                .build());
+
+        teacherSubjectRepository.save(TeacherSubject.builder()
+                .teacher(teacher)
+                .subject(subject)
+                .build());
+
+        studentEnrollmentRepository.save(StudentEnrollment.builder()
+                .student(student1)
+                .subject(subject)
+                .status(EnrollmentStatus.ACTIVE)
                 .build());
     }
 
@@ -351,8 +370,19 @@ class AssessmentEngineIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(1)));
 
+        Subject emptySubject = subjectRepository.save(Subject.builder()
+                .name("Empty Subject")
+                .code("EMP101")
+                .description("No quizzes")
+                .build());
+        studentEnrollmentRepository.save(StudentEnrollment.builder()
+                .student(student1)
+                .subject(emptySubject)
+                .status(EnrollmentStatus.ACTIVE)
+                .build());
+
         mockMvc.perform(get("/api/quizzes")
-                        .param("subjectId", UUID.randomUUID().toString())
+                        .param("subjectId", emptySubject.getId().toString())
                         .header("Authorization", "Bearer " + student1Token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data", hasSize(0)));

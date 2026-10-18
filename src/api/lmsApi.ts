@@ -11,6 +11,12 @@ import {
   StudentQuizResultDTO,
   StudentProgressDTO,
   CreateQuizRequest,
+  TeacherSubjectDTO,
+  EnrolledSubjectDTO,
+  StudentSummaryDTO,
+  EnrollmentDTO,
+  AssignTeacherRequest,
+  EnrollStudentRequest,
 } from '../types/lms';
 
 // Subject APIs
@@ -104,4 +110,50 @@ export const uploadDocument = async (formData: FormData): Promise<DocumentDTO> =
 export const createQuiz = async (data: CreateQuizRequest): Promise<any> => {
   const res = await apiClient.post<ApiResponse<any>>('/teacher/create-quiz', data);
   return res.data.data;
+};
+
+// Teacher Enrollment APIs
+export const getTeacherSubjects = async (): Promise<TeacherSubjectDTO[]> => {
+  const res = await apiClient.get<ApiResponse<TeacherSubjectDTO[]>>('/teacher/enrollment/subjects');
+  return res.data.data || [];
+};
+
+export const getTeacherEnrolledStudents = async (subjectId: string): Promise<StudentSummaryDTO[]> => {
+  const res = await apiClient.get<ApiResponse<StudentSummaryDTO[]>>(`/teacher/enrollment/subjects/${subjectId}/students`);
+  return res.data.data || [];
+};
+
+export const getTeacherAvailableStudents = async (subjectId: string): Promise<StudentSummaryDTO[]> => {
+  const res = await apiClient.get<ApiResponse<StudentSummaryDTO[]>>(`/teacher/enrollment/subjects/${subjectId}/available-students`);
+  return res.data.data || [];
+};
+
+export const enrollStudentInSubject = async (subjectId: string, data: EnrollStudentRequest): Promise<EnrollmentDTO> => {
+  const res = await apiClient.post<ApiResponse<EnrollmentDTO>>(`/teacher/enrollment/subjects/${subjectId}/students`, data);
+  return res.data.data;
+};
+
+export const unenrollStudentFromSubject = async (subjectId: string, studentId: string): Promise<void> => {
+  await apiClient.delete(`/teacher/enrollment/subjects/${subjectId}/students/${studentId}`);
+};
+
+// Student Enrollment APIs
+export const getStudentEnrolledSubjects = async (): Promise<EnrolledSubjectDTO[]> => {
+  const res = await apiClient.get<ApiResponse<EnrolledSubjectDTO[]>>('/student/enrollment/subjects');
+  return res.data.data || [];
+};
+
+// Admin Subject Assignment APIs
+export const assignTeacherToSubject = async (subjectId: string, data: AssignTeacherRequest): Promise<TeacherSubjectDTO> => {
+  const res = await apiClient.post<ApiResponse<TeacherSubjectDTO>>(`/admin/subjects/${subjectId}/teachers`, data);
+  return res.data.data;
+};
+
+export const removeTeacherFromSubject = async (subjectId: string, teacherId: string): Promise<void> => {
+  await apiClient.delete(`/admin/subjects/${subjectId}/teachers/${teacherId}`);
+};
+
+export const getSubjectTeachers = async (subjectId: string): Promise<TeacherSubjectDTO[]> => {
+  const res = await apiClient.get<ApiResponse<TeacherSubjectDTO[]>>(`/admin/subjects/${subjectId}/teachers`);
+  return res.data.data || [];
 };

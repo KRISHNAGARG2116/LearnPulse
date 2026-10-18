@@ -70,6 +70,12 @@ class StudentTeacherProfileIntegrationTest {
     @Autowired
     private com.learnpulse.backend.repository.NotesRepository notesRepository;
 
+    @Autowired
+    private com.learnpulse.backend.repository.StudentEnrollmentRepository studentEnrollmentRepository;
+
+    @Autowired
+    private com.learnpulse.backend.repository.TeacherSubjectRepository teacherSubjectRepository;
+
     @BeforeEach
     void setUp() {
         resultRepository.deleteAll();
@@ -77,6 +83,8 @@ class StudentTeacherProfileIntegrationTest {
         quizRepository.deleteAll();
         notesRepository.deleteAll();
         documentRepository.deleteAll();
+        studentEnrollmentRepository.deleteAll();
+        teacherSubjectRepository.deleteAll();
         userProfileRepository.deleteAll();
         userRepository.deleteAll();
 
