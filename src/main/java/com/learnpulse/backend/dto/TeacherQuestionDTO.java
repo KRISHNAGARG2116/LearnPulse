@@ -21,4 +21,6 @@ public class TeacherQuestionDTO {
     private String optionD;
     private String correctAnswer;
     private Integer marks;
+    private String explanation;
+    private String source;
 }

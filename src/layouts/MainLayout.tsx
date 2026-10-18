@@ -14,7 +14,12 @@ import {
   Users,
   Settings,
   GraduationCap,
-  Award
+  Award,
+  Bot,
+  FileText,
+  Layers,
+  Calendar,
+  Code
 } from 'lucide-react';
 
 export const MainLayout: React.FC = () => {
@@ -34,6 +39,11 @@ export const MainLayout: React.FC = () => {
       case 'STUDENT':
         return [
           { name: 'Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
+          { name: 'AI Tutor', path: '/student/tutor', icon: Bot },
+          { name: 'PDF Assistant', path: '/student/pdf-assistant', icon: FileText },
+          { name: 'Flashcards', path: '/student/flashcards', icon: Layers },
+          { name: 'Study Planner', path: '/student/study-plan', icon: Calendar },
+          { name: 'Code Explainer', path: '/student/code-explainer', icon: Code },
           { name: 'Practice', path: '/student/practice', icon: BookOpen },
           { name: 'My Results', path: '/student/results', icon: Award },
           { name: 'Profile', path: '/student/profile', icon: User },

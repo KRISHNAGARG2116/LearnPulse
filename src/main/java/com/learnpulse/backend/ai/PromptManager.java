@@ -276,5 +276,56 @@ public class PromptManager {
         messages.add(new UserMessage(userBuilder.toString()));
         return new Prompt(messages);
     }
+
+    private static final String QUIZ_GENERATION_SYSTEM_PROMPT = """
+            You are an expert academic assessment designer for the LearnPulse platform.
+            Your role is to generate rigorous, high-quality multiple-choice questions (MCQs) grounded strictly in the provided educational document content.
+
+            Strict Guidelines:
+            1. Every question must be directly supported by facts in the provided Educational Material. Do not invent facts or extrapolate beyond the material.
+            2. Each question MUST have exactly four distinct, non-empty options: "optionA", "optionB", "optionC", "optionD".
+            3. Exactly one option must be the correct answer. The "correctAnswer" field MUST be one of "A", "B", "C", or "D".
+            4. Provide a clear educational "explanation" clarifying why the correct answer is right based directly on the text.
+            5. Set appropriate difficulty ("BEGINNER", "INTERMEDIATE", or "ADVANCED").
+            6. Output ONLY a valid JSON object matching this exact schema:
+            {
+              "title": "Descriptive Quiz Title",
+              "questions": [
+                {
+                  "questionText": "Clear question text?",
+                  "optionA": "First distinct option",
+                  "optionB": "Second distinct option",
+                  "optionC": "Third distinct option",
+                  "optionD": "Fourth distinct option",
+                  "correctAnswer": "A",
+                  "explanation": "Detailed explanation grounded in the text.",
+                  "difficulty": "INTERMEDIATE",
+                  "marks": 1
+                }
+              ]
+            }
+            7. Do not include markdown code fences or conversational text.
+            """;
+
+    public Prompt buildQuizGenerationPrompt(String content, int questionCount, String difficulty, String topic) {
+        List<Message> messages = new ArrayList<>();
+        messages.add(new SystemMessage(QUIZ_GENERATION_SYSTEM_PROMPT));
+
+        StringBuilder userBuilder = new StringBuilder();
+        userBuilder.append("Educational Document Content:\n-----------------\n");
+        userBuilder.append(content.trim());
+        userBuilder.append("\n-----------------\nTarget Parameters:\n");
+        userBuilder.append("- Number of Questions: ").append(questionCount).append("\n");
+        if (StringUtils.hasText(difficulty)) {
+            userBuilder.append("- Target Difficulty: ").append(difficulty.trim()).append("\n");
+        }
+        if (StringUtils.hasText(topic)) {
+            userBuilder.append("- Specific Topic/Category: ").append(topic.trim()).append("\n");
+        }
+        userBuilder.append("\nGenerate JSON Multiple-Choice Assessment:");
+
+        messages.add(new UserMessage(userBuilder.toString()));
+        return new Prompt(messages);
+    }
 }
 

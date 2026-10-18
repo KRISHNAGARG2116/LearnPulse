@@ -40,6 +40,9 @@ public class Question {
     @Column(name = "correct_answer", nullable = false, length = 1)
     private String correctAnswer;
 
+    @Column(name = "explanation", columnDefinition = "TEXT")
+    private String explanation;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)

@@ -1,6 +1,7 @@
 package com.learnpulse.backend.service;
 
 import com.learnpulse.backend.ai.PromptManager;
+import com.learnpulse.backend.dto.AiChatHistoryDTO;
 import com.learnpulse.backend.dto.AiChatRequest;
 import com.learnpulse.backend.dto.AiChatResponse;
 import com.learnpulse.backend.entity.AiChatHistory;
@@ -143,5 +144,39 @@ public class AiLlmService {
             log.warn("Unable to fetch conversation history for user: {}, conversationId: {}. Exception: {}", userId, conversationId, ex.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Retrieves persisted chat history for an authenticated student user.
+     */
+    @Transactional(readOnly = true)
+    public List<AiChatHistoryDTO> getChatHistory(User currentUser, String conversationId) {
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new IllegalArgumentException("Authenticated user context is required to retrieve chat history.");
+        }
+
+        List<AiChatHistory> historyList;
+        if (StringUtils.hasText(conversationId)) {
+            historyList = chatHistoryRepository.findByUserIdAndConversationIdOrderByCreatedAtAsc(
+                    currentUser.getId(), conversationId.trim());
+        } else {
+            historyList = chatHistoryRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId());
+        }
+
+        if (historyList == null || historyList.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<AiChatHistoryDTO> dtoList = new ArrayList<>();
+        for (AiChatHistory h : historyList) {
+            dtoList.add(AiChatHistoryDTO.builder()
+                    .id(h.getId())
+                    .conversationId(h.getConversationId())
+                    .userMessage(h.getUserMessage())
+                    .aiResponse(h.getAiResponse())
+                    .createdAt(h.getCreatedAt())
+                    .build());
+        }
+        return dtoList;
     }
 }

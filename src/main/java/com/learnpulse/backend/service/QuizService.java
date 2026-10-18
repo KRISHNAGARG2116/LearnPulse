@@ -262,6 +262,8 @@ public class QuizService {
                         .optionD(q.getOptionD())
                         .correctAnswer(q.getCorrectAnswer())
                         .marks(q.getMarks())
+                        .explanation(q.getExplanation())
+                        .source(q.getSource() != null ? q.getSource().name() : null)
                         .build())
                 .collect(Collectors.toList());
 

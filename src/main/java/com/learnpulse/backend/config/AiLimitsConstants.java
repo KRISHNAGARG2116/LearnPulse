@@ -10,4 +10,5 @@ public final class AiLimitsConstants {
     public static final int MAX_CODE_EXPLAIN_CHARS = 10000;
     public static final int MAX_FLASHCARDS_CHARS = 15000;
     public static final int MAX_STUDY_PLAN_SUBJECTS = 10;
+    public static final int MAX_QUIZ_GEN_CHARS = 20000;
 }

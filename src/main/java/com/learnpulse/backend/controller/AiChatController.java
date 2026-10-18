@@ -35,4 +35,17 @@ public class AiChatController {
 
         return ResponseEntity.ok(ApiResponse.success("AI response generated successfully", response));
     }
+
+    @GetMapping("/chat/history")
+    @Operation(summary = "Get AI Chat History", description = "Retrieves previously saved AI chat history for the authenticated user, optionally filtered by conversation ID.")
+    public ResponseEntity<ApiResponse<java.util.List<com.learnpulse.backend.dto.AiChatHistoryDTO>>> getChatHistory(
+            @RequestParam(required = false) String conversationId,
+            @AuthenticationPrincipal User currentUser) {
+
+        log.info("Received GET /api/ai/chat/history request for conversationId '{}' from user: {}",
+                conversationId, currentUser != null ? currentUser.getEmail() : "anonymous");
+
+        java.util.List<com.learnpulse.backend.dto.AiChatHistoryDTO> history = aiLlmService.getChatHistory(currentUser, conversationId);
+        return ResponseEntity.ok(ApiResponse.success("Chat history retrieved successfully", history));
+    }
 }

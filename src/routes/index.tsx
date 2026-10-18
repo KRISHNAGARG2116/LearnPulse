@@ -13,6 +13,11 @@ import { StudentQuizExecutionPage } from '../pages/student/StudentQuizExecutionP
 import { StudentQuizResultPage } from '../pages/student/StudentQuizResultPage';
 import { StudentProgressPage } from '../pages/student/StudentProgressPage';
 import { StudentProfilePage } from '../pages/student/StudentProfilePage';
+import { StudentAiTutorPage } from '../pages/student/StudentAiTutorPage';
+import { StudentPdfAssistantPage } from '../pages/student/StudentPdfAssistantPage';
+import { StudentFlashcardsPage } from '../pages/student/StudentFlashcardsPage';
+import { StudentStudyPlannerPage } from '../pages/student/StudentStudyPlannerPage';
+import { StudentCodeExplainerPage } from '../pages/student/StudentCodeExplainerPage';
 
 import { TeacherDashboardPage } from '../pages/teacher/TeacherDashboardPage';
 import { TeacherQuestionsPage } from '../pages/teacher/TeacherQuestionsPage';
@@ -45,6 +50,11 @@ export const AppRoutes: React.FC = () => {
           <Route path="/student/progress" element={<StudentProgressPage />} />
           <Route path="/student/practice" element={<StudentSubjectCatalogPage />} />
           <Route path="/student/results" element={<StudentProgressPage />} />
+          <Route path="/student/tutor" element={<StudentAiTutorPage />} />
+          <Route path="/student/pdf-assistant" element={<StudentPdfAssistantPage />} />
+          <Route path="/student/flashcards" element={<StudentFlashcardsPage />} />
+          <Route path="/student/study-plan" element={<StudentStudyPlannerPage />} />
+          <Route path="/student/code-explainer" element={<StudentCodeExplainerPage />} />
           <Route path="/student/profile" element={<StudentProfilePage />} />
         </Route>
       </Route>

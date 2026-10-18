@@ -17,6 +17,18 @@ import {
   EnrollmentDTO,
   AssignTeacherRequest,
   EnrollStudentRequest,
+  GenerateQuizRequest,
+  GeneratedQuizResponse,
+  AiChatHistoryDTO,
+  RagSourceDTO,
+  SummarizeContentRequest,
+  SummarizeResponse,
+  CodeExplainerRequest,
+  CodeExplainerResponse,
+  StudyPlanRequest,
+  StudyPlanResponse,
+  FlashcardGenerateRequest,
+  FlashcardGenerateResponse,
 } from '../types/lms';
 
 // Subject APIs
@@ -157,3 +169,62 @@ export const getSubjectTeachers = async (subjectId: string): Promise<TeacherSubj
   const res = await apiClient.get<ApiResponse<TeacherSubjectDTO[]>>(`/admin/subjects/${subjectId}/teachers`);
   return res.data.data || [];
 };
+
+// Week 12: AI Quiz Generator APIs
+export const generateAiQuiz = async (data: GenerateQuizRequest): Promise<GeneratedQuizResponse> => {
+  const res = await apiClient.post<ApiResponse<GeneratedQuizResponse>>('/ai/generate-quiz', data);
+  return res.data.data;
+};
+
+export const publishQuiz = async (quizId: string): Promise<any> => {
+  const res = await apiClient.post<ApiResponse<any>>(`/teacher/quizzes/${quizId}/publish`);
+  return res.data.data;
+};
+
+// Week 12: AI Chat & Tutor APIs
+export const sendAiChat = async (message: string, conversationId?: string, subjectName?: string): Promise<{ conversationId: string; userMessage: string; aiResponse: string; timestamp: string; fallback: boolean }> => {
+  const res = await apiClient.post<ApiResponse<{ conversationId: string; userMessage: string; aiResponse: string; timestamp: string; fallback: boolean }>>('/ai/chat', {
+    message,
+    conversationId,
+    subjectName,
+  });
+  return res.data.data;
+};
+
+export const getAiChatHistory = async (conversationId?: string): Promise<AiChatHistoryDTO[]> => {
+  const params: Record<string, string> = {};
+  if (conversationId) params.conversationId = conversationId;
+  const res = await apiClient.get<ApiResponse<AiChatHistoryDTO[]>>('/ai/chat/history', { params });
+  return res.data.data || [];
+};
+
+// Week 12: RAG PDF Assistant APIs
+export const askDocumentRag = async (documentId: string, question: string): Promise<{ documentId: string; question: string; answer: string; sources: RagSourceDTO[]; fallback: boolean; timestamp: string }> => {
+  const res = await apiClient.post<ApiResponse<{ documentId: string; question: string; answer: string; sources: RagSourceDTO[]; fallback: boolean; timestamp: string }>>('/ai/ask-document', {
+    documentId,
+    question,
+  });
+  return res.data.data;
+};
+
+// Week 12: Supplemental AI Learning APIs
+export const summarizeContent = async (data: SummarizeContentRequest): Promise<SummarizeResponse> => {
+  const res = await apiClient.post<ApiResponse<SummarizeResponse>>('/ai/summarize', data);
+  return res.data.data;
+};
+
+export const explainCode = async (data: CodeExplainerRequest): Promise<CodeExplainerResponse> => {
+  const res = await apiClient.post<ApiResponse<CodeExplainerResponse>>('/ai/explain-code', data);
+  return res.data.data;
+};
+
+export const generateStudyPlan = async (data: StudyPlanRequest): Promise<StudyPlanResponse> => {
+  const res = await apiClient.post<ApiResponse<StudyPlanResponse>>('/ai/study-plan', data);
+  return res.data.data;
+};
+
+export const generateFlashcards = async (data: FlashcardGenerateRequest): Promise<FlashcardGenerateResponse> => {
+  const res = await apiClient.post<ApiResponse<FlashcardGenerateResponse>>('/ai/flashcards', data);
+  return res.data.data;
+};
+
