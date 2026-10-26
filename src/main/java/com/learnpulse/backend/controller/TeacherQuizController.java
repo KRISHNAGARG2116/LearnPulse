@@ -5,6 +5,7 @@ import com.learnpulse.backend.dto.CreateQuizRequest;
 import com.learnpulse.backend.dto.TeacherQuizDTO;
 import com.learnpulse.backend.entity.User;
 import com.learnpulse.backend.service.QuizService;
+import com.learnpulse.backend.security.TeacherVerificationGuard;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class TeacherQuizController {
 
     private final QuizService quizService;
+    private final TeacherVerificationGuard teacherVerificationGuard;
 
     @PostMapping("/create-quiz")
     @Operation(summary = "Create a new quiz with nested questions", description = "Creates a quiz and persists all nested questions in a single atomic transaction")
@@ -32,6 +34,7 @@ public class TeacherQuizController {
             @AuthenticationPrincipal User creator,
             @Valid @RequestBody CreateQuizRequest request) {
 
+        teacherVerificationGuard.checkVerifiedTeacher(creator);
         TeacherQuizDTO createdQuiz = quizService.createQuiz(creator, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Quiz created successfully", createdQuiz));
@@ -43,6 +46,7 @@ public class TeacherQuizController {
             @AuthenticationPrincipal User teacher,
             @PathVariable java.util.UUID id) {
 
+        teacherVerificationGuard.checkVerifiedTeacher(teacher);
         TeacherQuizDTO publishedQuiz = quizService.publishQuiz(teacher, id);
         return ResponseEntity.ok(ApiResponse.success("Quiz published successfully", publishedQuiz));
     }

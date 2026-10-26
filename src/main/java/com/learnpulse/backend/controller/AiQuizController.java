@@ -4,6 +4,7 @@ import com.learnpulse.backend.dto.ApiResponse;
 import com.learnpulse.backend.dto.GenerateQuizRequest;
 import com.learnpulse.backend.dto.GeneratedQuizResponse;
 import com.learnpulse.backend.entity.User;
+import com.learnpulse.backend.security.TeacherVerificationGuard;
 import com.learnpulse.backend.service.AiQuizGenerationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class AiQuizController {
 
     private final AiQuizGenerationService aiQuizGenerationService;
+    private final TeacherVerificationGuard teacherVerificationGuard;
 
     @PostMapping("/generate-quiz")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
@@ -36,6 +38,8 @@ public class AiQuizController {
     public ResponseEntity<ApiResponse<GeneratedQuizResponse>> generateQuiz(
             @AuthenticationPrincipal User currentUser,
             @Valid @RequestBody GenerateQuizRequest request) {
+
+        teacherVerificationGuard.checkVerifiedTeacher(currentUser);
 
         log.info("Received POST /api/ai/generate-quiz request from user {} for document ID {}",
                 currentUser != null ? currentUser.getEmail() : "anonymous",

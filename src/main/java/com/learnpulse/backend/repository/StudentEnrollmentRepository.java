@@ -25,4 +25,10 @@ public interface StudentEnrollmentRepository extends JpaRepository<StudentEnroll
     boolean existsByStudentIdAndSubjectId(UUID studentId, UUID subjectId);
 
     boolean existsByStudentIdAndSubjectIdAndStatus(UUID studentId, UUID subjectId, EnrollmentStatus status);
+
+    long countByStudentIdAndStatus(UUID studentId, EnrollmentStatus status);
+
+    long countBySubjectIdAndStatus(UUID subjectId, EnrollmentStatus status);
+
+    long countByStatus(EnrollmentStatus status);
 }

@@ -42,15 +42,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     String username = jwtProvider.getUsernameFromToken(jwt);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                    if (!userDetails.isEnabled()) {
+                        log.warn("Rejected JWT token: User account is disabled/deactivated for email: {}", username);
+                    } else if (!userDetails.isAccountNonLocked()) {
+                        log.warn("Rejected JWT token: User account is locked for email: {}", username);
+                    } else {
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities()
+                                );
 
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    }
                 } else {
                     log.warn("Rejected JWT token: Expected ACCESS token type but received {}", tokenType);
                 }

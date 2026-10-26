@@ -17,18 +17,36 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class StudyPlanService {
 
     private final ChatClient chatClient;
     private final PromptManager promptManager;
     private final StructuredAiOutputParser structuredParser;
+    private final AiTelemetryService aiTelemetryService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public StudyPlanService(ChatClient chatClient,
+                            PromptManager promptManager,
+                            StructuredAiOutputParser structuredParser,
+                            @org.springframework.beans.factory.annotation.Autowired(required = false) AiTelemetryService aiTelemetryService) {
+        this.chatClient = chatClient;
+        this.promptManager = promptManager;
+        this.structuredParser = structuredParser;
+        this.aiTelemetryService = aiTelemetryService;
+    }
+
+    public StudyPlanService(ChatClient chatClient,
+                            PromptManager promptManager,
+                            StructuredAiOutputParser structuredParser) {
+        this(chatClient, promptManager, structuredParser, null);
+    }
 
     public StudyPlanResponse generateStudyPlan(User currentUser, StudyPlanRequest request) {
         if (currentUser == null) {
@@ -70,13 +88,33 @@ public class StudyPlanService {
 
         Prompt prompt = promptManager.buildStudyPlanPrompt(examDate.toString(), daysRemaining, subjects, availableHours);
         String rawOutput;
+        Instant startTime = Instant.now();
         try {
             org.springframework.ai.chat.ChatResponse response = chatClient.call(prompt);
             rawOutput = (response != null && response.getResult() != null && response.getResult().getOutput() != null)
                     ? response.getResult().getOutput().getContent()
                     : null;
+            int promptTokens;
+            int compTokens;
+            String provenance;
+            if (response != null && response.getMetadata() != null && response.getMetadata().getUsage() != null
+                    && response.getMetadata().getUsage().getPromptTokens() != null && response.getMetadata().getUsage().getPromptTokens() > 0) {
+                promptTokens = response.getMetadata().getUsage().getPromptTokens().intValue();
+                compTokens = response.getMetadata().getUsage().getGenerationTokens() != null ? response.getMetadata().getUsage().getGenerationTokens().intValue() : 0;
+                provenance = "PROVIDER_REPORTED";
+            } else {
+                promptTokens = 50;
+                compTokens = (rawOutput != null) ? Math.max(1, rawOutput.length() / 4) : 0;
+                provenance = "LOCAL_ESTIMATION";
+            }
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("STUDY_PLANNER", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "SUCCESS", promptTokens, compTokens, provenance, null);
+            }
         } catch (Exception ex) {
             log.error("Ollama/ChatClient invocation failed for study planner: {}", ex.getMessage(), ex);
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("STUDY_PLANNER", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "FAILED", 50, 0, "LOCAL_ESTIMATION", ex.getMessage());
+            }
             throw new ApiException("The AI study planner service is currently offline or unreachable. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE);
         }
 

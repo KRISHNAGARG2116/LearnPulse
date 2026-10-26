@@ -228,3 +228,123 @@ export const generateFlashcards = async (data: FlashcardGenerateRequest): Promis
   return res.data.data;
 };
 
+// ==========================================
+// Week 13: Admin Governance & Analytics APIs
+// ==========================================
+
+// User Management
+export const getAdminUsers = async (params?: {
+  role?: string;
+  enabled?: boolean;
+  search?: string;
+  page?: number;
+  size?: number;
+}): Promise<{ content: import('../types/lms').AdminUserDTO[]; totalElements: number; totalPages: number }> => {
+  const res = await apiClient.get<ApiResponse<any>>('/admin/users', { params });
+  return res.data.data;
+};
+
+export const getAdminUserDetail = async (id: string): Promise<import('../types/lms').AdminUserDetailDTO> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').AdminUserDetailDTO>>(`/admin/users/${id}`);
+  return res.data.data;
+};
+
+export const updateAdminUserProfile = async (id: string, data: import('../types/lms').UpdateUserProfileRequest): Promise<import('../types/lms').AdminUserDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminUserDTO>>(`/admin/users/${id}`, data);
+  return res.data.data;
+};
+
+export const updateAdminUserRole = async (id: string, role: string): Promise<import('../types/lms').AdminUserDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminUserDTO>>(`/admin/users/${id}/role`, { role });
+  return res.data.data;
+};
+
+export const initiatePasswordReset = async (id: string): Promise<import('../types/lms').PasswordResetResponse> => {
+  const res = await apiClient.post<ApiResponse<import('../types/lms').PasswordResetResponse>>(`/admin/users/${id}/password-reset`);
+  return res.data.data;
+};
+
+export const deactivateAdminUser = async (id: string): Promise<import('../types/lms').AdminUserDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminUserDTO>>(`/admin/users/${id}/deactivate`);
+  return res.data.data;
+};
+
+export const reactivateAdminUser = async (id: string): Promise<import('../types/lms').AdminUserDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminUserDTO>>(`/admin/users/${id}/reactivate`);
+  return res.data.data;
+};
+
+// Platform Analytics
+export const getPlatformSummary = async (): Promise<import('../types/lms').PlatformSummaryDTO> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').PlatformSummaryDTO>>('/admin/analytics/summary');
+  return res.data.data;
+};
+
+export const getUserActivityTrends = async (): Promise<import('../types/lms').UserActivityTrendDTO[]> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').UserActivityTrendDTO[]>>('/admin/analytics/user-activity');
+  return res.data.data;
+};
+
+export const getCourseActivity = async (): Promise<import('../types/lms').CourseActivityDTO[]> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').CourseActivityDTO[]>>('/admin/analytics/course-activity');
+  return res.data.data;
+};
+
+export const getAiUsageSummary = async (): Promise<import('../types/lms').AiUsageSummaryDTO> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').AiUsageSummaryDTO>>('/admin/analytics/ai-usage');
+  return res.data.data;
+};
+
+export const getAiTelemetry = async (page = 0, size = 10): Promise<{ content: import('../types/lms').AiTelemetryRecord[]; totalElements: number; totalPages: number }> => {
+  const res = await apiClient.get<ApiResponse<any>>('/admin/analytics/ai-telemetry', { params: { page, size } });
+  return res.data.data;
+};
+
+// Teacher Verification
+export const getAdminTeachers = async (status?: string): Promise<import('../types/lms').TeacherVerificationDTO[]> => {
+  const params: Record<string, string> = {};
+  if (status) params.status = status;
+  const res = await apiClient.get<ApiResponse<import('../types/lms').TeacherVerificationDTO[]>>('/admin/teachers', { params });
+  return res.data.data;
+};
+
+export const getAdminPendingTeachers = async (): Promise<import('../types/lms').TeacherVerificationDTO[]> => {
+  const res = await apiClient.get<ApiResponse<import('../types/lms').TeacherVerificationDTO[]>>('/admin/teachers/pending');
+  return res.data.data;
+};
+
+export const approveTeacher = async (id: string): Promise<import('../types/lms').TeacherVerificationDTO> => {
+  const res = await apiClient.post<ApiResponse<import('../types/lms').TeacherVerificationDTO>>(`/admin/teachers/${id}/approve`);
+  return res.data.data;
+};
+
+export const rejectTeacher = async (id: string, reason?: string): Promise<import('../types/lms').TeacherVerificationDTO> => {
+  const res = await apiClient.post<ApiResponse<import('../types/lms').TeacherVerificationDTO>>(`/admin/teachers/${id}/reject`, { reason });
+  return res.data.data;
+};
+
+// Content Moderation
+export const getAdminDocuments = async (active?: boolean): Promise<import('../types/lms').AdminDocumentDTO[]> => {
+  const params: Record<string, boolean> = {};
+  if (active !== undefined) params.active = active;
+  const res = await apiClient.get<ApiResponse<import('../types/lms').AdminDocumentDTO[]>>('/admin/content/documents', { params });
+  return res.data.data;
+};
+
+export const updateAdminDocumentStatus = async (id: string, active: boolean): Promise<import('../types/lms').AdminDocumentDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminDocumentDTO>>(`/admin/content/documents/${id}/status`, { active });
+  return res.data.data;
+};
+
+export const getAdminQuizzes = async (status?: string): Promise<import('../types/lms').AdminQuizDTO[]> => {
+  const params: Record<string, string> = {};
+  if (status) params.status = status;
+  const res = await apiClient.get<ApiResponse<import('../types/lms').AdminQuizDTO[]>>('/admin/content/quizzes', { params });
+  return res.data.data;
+};
+
+export const updateAdminQuizStatus = async (id: string, status?: string, active?: boolean): Promise<import('../types/lms').AdminQuizDTO> => {
+  const res = await apiClient.patch<ApiResponse<import('../types/lms').AdminQuizDTO>>(`/admin/content/quizzes/${id}/status`, { status, active });
+  return res.data.data;
+};
+

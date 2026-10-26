@@ -7,6 +7,7 @@ import com.learnpulse.backend.dto.NoteDTO;
 import com.learnpulse.backend.entity.User;
 import com.learnpulse.backend.service.DocumentService;
 import com.learnpulse.backend.service.NotesService;
+import com.learnpulse.backend.security.TeacherVerificationGuard;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +33,7 @@ public class TeacherDocumentUploadController {
 
     private final DocumentService documentService;
     private final NotesService notesService;
+    private final TeacherVerificationGuard teacherVerificationGuard;
 
     @PostMapping(value = "/upload-pdf", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
@@ -48,6 +50,7 @@ public class TeacherDocumentUploadController {
             @Parameter(description = "Optional Chapter ID")
             @RequestParam(value = "chapterId", required = false) UUID chapterId) {
 
+        teacherVerificationGuard.checkVerifiedTeacher(teacher);
         DocumentDTO documentDTO = documentService.uploadDocument(teacher, file, subjectId, chapterId);
         return new ResponseEntity<>(ApiResponse.success("Document uploaded, validated, and processed successfully", documentDTO), HttpStatus.CREATED);
     }
@@ -70,6 +73,8 @@ public class TeacherDocumentUploadController {
             @RequestParam(value = "chapterId", required = false) UUID chapterId,
             @Parameter(description = "Optional Attachment File (PDF, DOC, DOCX)")
             @RequestParam(value = "file", required = false) MultipartFile file) {
+
+        teacherVerificationGuard.checkVerifiedTeacher(teacher);
 
         CreateNoteRequest request = CreateNoteRequest.builder()
                 .title(title)

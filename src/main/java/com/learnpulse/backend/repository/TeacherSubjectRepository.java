@@ -18,4 +18,6 @@ public interface TeacherSubjectRepository extends JpaRepository<TeacherSubject, 
     Optional<TeacherSubject> findByTeacherIdAndSubjectId(UUID teacherId, UUID subjectId);
 
     boolean existsByTeacherIdAndSubjectId(UUID teacherId, UUID subjectId);
+
+    long countByTeacherId(UUID teacherId);
 }

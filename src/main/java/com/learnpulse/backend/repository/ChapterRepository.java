@@ -13,4 +13,6 @@ public interface ChapterRepository extends JpaRepository<Chapter, UUID> {
     List<Chapter> findBySubjectIdOrderByChapterNumberAsc(UUID subjectId);
 
     boolean existsBySubjectIdAndChapterNumber(UUID subjectId, Integer chapterNumber);
+
+    long countBySubjectId(UUID subjectId);
 }

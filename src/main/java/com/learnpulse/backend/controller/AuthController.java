@@ -5,6 +5,8 @@ import com.learnpulse.backend.dto.AuthResponse;
 import com.learnpulse.backend.dto.LoginRequest;
 import com.learnpulse.backend.dto.RefreshTokenRequest;
 import com.learnpulse.backend.dto.RegisterRequest;
+import com.learnpulse.backend.dto.ForgotPasswordRequest;
+import com.learnpulse.backend.dto.ResetPasswordRequest;
 import com.learnpulse.backend.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,5 +58,25 @@ public class AuthController {
                 authResponse
         );
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Initiate Password Reset Request", description = "Dispatches a password reset email if the account exists, returning a generic confirmation")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                "If an account with that email exists, password reset instructions have been dispatched.",
+                null
+        ));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Complete Password Reset", description = "Consumes a valid, unexpired reset token and sets a new account password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(ApiResponse.success(
+                "Password has been reset successfully. Please log in with your new password.",
+                null
+        ));
     }
 }

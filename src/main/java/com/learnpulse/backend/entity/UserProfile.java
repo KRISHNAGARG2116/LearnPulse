@@ -37,6 +37,13 @@ public class UserProfile {
     @Column(name = "enrollment_number")
     private String enrollmentNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "teacher_verification_status")
+    private TeacherVerificationStatus teacherVerificationStatus;
+
+    @Column(name = "rejection_reason", length = 1000)
+    private String rejectionReason;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

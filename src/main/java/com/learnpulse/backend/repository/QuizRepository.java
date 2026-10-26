@@ -21,4 +21,12 @@ public interface QuizRepository extends JpaRepository<Quiz, UUID> {
     java.util.Optional<Quiz> findFirstBySubjectIdAndChapterIdIsNull(UUID subjectId);
 
     List<Quiz> findBySubjectIdAndIsPublishedTrue(UUID subjectId);
+
+    long countByCreatedById(UUID createdById);
+
+    long countBySubjectId(UUID subjectId);
+
+    long countByIsPublished(boolean isPublished);
+
+    long countByStatus(com.learnpulse.backend.entity.QuizStatus status);
 }

@@ -31,6 +31,7 @@ public class AiLlmService {
     private final ChatClient chatClient;
     private final PromptManager promptManager;
     private final AiChatHistoryRepository chatHistoryRepository;
+    private final AiTelemetryService aiTelemetryService;
 
     private static final String FALLBACK_MESSAGE = 
             "The AI tutor service is currently offline or unreachable. " +
@@ -67,6 +68,7 @@ public class AiLlmService {
 
         String aiResponseText;
         boolean isFallback = false;
+        Instant startTime = Instant.now();
 
         try {
             log.info("Dispatching prompt to ChatClient/Ollama for userId: {}, conversationId: {}", currentUser.getId(), conversationId);
@@ -79,15 +81,31 @@ public class AiLlmService {
             
             if (StringUtils.hasText(modelOutput)) {
                 aiResponseText = modelOutput.trim();
+                int promptTokens;
+                int compTokens;
+                String provenance;
+                if (response.getMetadata() != null && response.getMetadata().getUsage() != null
+                        && response.getMetadata().getUsage().getPromptTokens() != null && response.getMetadata().getUsage().getPromptTokens() > 0) {
+                    promptTokens = response.getMetadata().getUsage().getPromptTokens().intValue();
+                    compTokens = response.getMetadata().getUsage().getGenerationTokens() != null ? response.getMetadata().getUsage().getGenerationTokens().intValue() : 0;
+                    provenance = "PROVIDER_REPORTED";
+                } else {
+                    promptTokens = Math.max(1, userMessage.length() / 4);
+                    compTokens = Math.max(1, aiResponseText.length() / 4);
+                    provenance = "LOCAL_ESTIMATION";
+                }
+                aiTelemetryService.recordOperation("AI_TUTOR_CHAT", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "SUCCESS", promptTokens, compTokens, provenance, null);
             } else {
                 log.warn("Received empty/null response from LLM for conversationId: {}", conversationId);
                 aiResponseText = FALLBACK_MESSAGE;
                 isFallback = true;
+                aiTelemetryService.recordOperation("AI_TUTOR_CHAT", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "FALLBACK", Math.max(1, userMessage.length() / 4), 0, "LOCAL_ESTIMATION", "Empty LLM output");
             }
         } catch (Exception ex) {
             log.error("AI service error during ChatClient invocation for conversationId {}: {}", conversationId, ex.getMessage(), ex);
             aiResponseText = FALLBACK_MESSAGE;
             isFallback = true;
+            aiTelemetryService.recordOperation("AI_TUTOR_CHAT", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "FAILED", Math.max(1, userMessage.length() / 4), 0, "LOCAL_ESTIMATION", ex.getMessage());
         }
 
         // 3. Persist successful interaction (or non-fatal history record) to database

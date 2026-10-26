@@ -25,6 +25,8 @@ import { TeacherStudentsPage } from '../pages/teacher/TeacherStudentsPage';
 
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
+import { AdminTeachersPage } from '../pages/admin/AdminTeachersPage';
+import { AdminContentModerationPage } from '../pages/admin/AdminContentModerationPage';
 
 import { NotFoundPage } from '../pages/fallback/NotFoundPage';
 import { ForbiddenPage } from '../pages/fallback/ForbiddenPage';
@@ -75,9 +77,10 @@ export const AppRoutes: React.FC = () => {
         <Route element={<MainLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
-          <Route path="/admin/teachers" element={<AdminUsersPage />} />
+          <Route path="/admin/teachers" element={<AdminTeachersPage />} />
           <Route path="/admin/students" element={<AdminUsersPage />} />
-          <Route path="/admin/system-settings" element={<AdminDashboardPage />} />
+          <Route path="/admin/content-moderation" element={<AdminContentModerationPage />} />
+          <Route path="/admin/system-settings" element={<AdminContentModerationPage />} />
         </Route>
       </Route>
 

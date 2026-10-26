@@ -12,7 +12,6 @@ import {
   User,
   FolderKanban,
   Users,
-  Settings,
   GraduationCap,
   Award,
   Bot,
@@ -59,10 +58,9 @@ export const MainLayout: React.FC = () => {
       case 'ADMIN':
         return [
           { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-          { name: 'Users', path: '/admin/users', icon: Users },
-          { name: 'Teachers', path: '/admin/teachers', icon: UserCheck },
-          { name: 'Students', path: '/admin/students', icon: GraduationCap },
-          { name: 'System Settings', path: '/admin/system-settings', icon: Settings },
+          { name: 'User Directory', path: '/admin/users', icon: Users },
+          { name: 'Teacher Verification', path: '/admin/teachers', icon: UserCheck },
+          { name: 'Content Moderation', path: '/admin/content-moderation', icon: FolderKanban },
         ];
       default:
         return [];

@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiQuizGenerationService {
 
     private final ChatClient chatClient;
@@ -37,6 +36,36 @@ public class AiQuizGenerationService {
     private final TeacherSubjectRepository teacherSubjectRepository;
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
+    private final AiTelemetryService aiTelemetryService;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AiQuizGenerationService(ChatClient chatClient,
+                                   PromptManager promptManager,
+                                   StructuredAiOutputParser structuredParser,
+                                   UploadedDocumentRepository documentRepository,
+                                   TeacherSubjectRepository teacherSubjectRepository,
+                                   QuizRepository quizRepository,
+                                   QuestionRepository questionRepository,
+                                   @org.springframework.beans.factory.annotation.Autowired(required = false) AiTelemetryService aiTelemetryService) {
+        this.chatClient = chatClient;
+        this.promptManager = promptManager;
+        this.structuredParser = structuredParser;
+        this.documentRepository = documentRepository;
+        this.teacherSubjectRepository = teacherSubjectRepository;
+        this.quizRepository = quizRepository;
+        this.questionRepository = questionRepository;
+        this.aiTelemetryService = aiTelemetryService;
+    }
+
+    public AiQuizGenerationService(ChatClient chatClient,
+                                   PromptManager promptManager,
+                                   StructuredAiOutputParser structuredParser,
+                                   UploadedDocumentRepository documentRepository,
+                                   TeacherSubjectRepository teacherSubjectRepository,
+                                   QuizRepository quizRepository,
+                                   QuestionRepository questionRepository) {
+        this(chatClient, promptManager, structuredParser, documentRepository, teacherSubjectRepository, quizRepository, questionRepository, null);
+    }
 
     @Transactional
     public GeneratedQuizResponse generateAndPersistQuiz(User currentUser, GenerateQuizRequest request) {
@@ -99,13 +128,33 @@ public class AiQuizGenerationService {
         );
 
         String rawOutput;
+        Instant startTime = Instant.now();
         try {
             org.springframework.ai.chat.ChatResponse chatResponse = chatClient.call(prompt);
             rawOutput = (chatResponse != null && chatResponse.getResult() != null && chatResponse.getResult().getOutput() != null)
                     ? chatResponse.getResult().getOutput().getContent()
                     : null;
+            int promptTokens;
+            int compTokens;
+            String provenance;
+            if (chatResponse != null && chatResponse.getMetadata() != null && chatResponse.getMetadata().getUsage() != null
+                    && chatResponse.getMetadata().getUsage().getPromptTokens() != null && chatResponse.getMetadata().getUsage().getPromptTokens() > 0) {
+                promptTokens = chatResponse.getMetadata().getUsage().getPromptTokens().intValue();
+                compTokens = chatResponse.getMetadata().getUsage().getGenerationTokens() != null ? chatResponse.getMetadata().getUsage().getGenerationTokens().intValue() : 0;
+                provenance = "PROVIDER_REPORTED";
+            } else {
+                promptTokens = Math.max(1, contentForPrompt.length() / 4);
+                compTokens = (rawOutput != null) ? Math.max(1, rawOutput.length() / 4) : 0;
+                provenance = "LOCAL_ESTIMATION";
+            }
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("AI_QUIZ_GENERATION", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "SUCCESS", promptTokens, compTokens, provenance, null);
+            }
         } catch (Exception ex) {
             log.error("AI service failure during quiz generation: {}", ex.getMessage(), ex);
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("AI_QUIZ_GENERATION", "qwen2.5-coder:7b", currentUser, startTime, Instant.now(), "FAILED", Math.max(1, contentForPrompt.length() / 4), 0, "LOCAL_ESTIMATION", ex.getMessage());
+            }
             throw new ApiException("The AI quiz generation service is currently offline or unreachable. Please try again later.", HttpStatus.SERVICE_UNAVAILABLE);
         }
 

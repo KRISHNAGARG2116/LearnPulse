@@ -349,3 +349,147 @@ export interface SummarizeResponse {
   keywords?: string[];
 }
 
+// Week 13: Admin Governance & Analytics Types
+export type RoleType = 'STUDENT' | 'TEACHER' | 'ADMIN';
+export type TeacherVerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface AdminUserDTO {
+  id: string;
+  email: string;
+  role: RoleType;
+  enabled: boolean;
+  accountNonLocked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  firstName?: string;
+  lastName?: string;
+  department?: string;
+  enrollmentNumber?: string;
+  teacherVerificationStatus?: TeacherVerificationStatus;
+}
+
+export interface AdminUserDetailDTO extends AdminUserDTO {
+  rejectionReason?: string;
+  enrolledSubjectsCount: number;
+  assignedSubjectsCount: number;
+  completedQuizzesCount: number;
+  createdQuizzesCount: number;
+  uploadedDocumentsCount: number;
+}
+
+export interface UpdateUserProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  department?: string;
+  enrollmentNumber?: string;
+}
+
+export interface PasswordResetResponse {
+  message: string;
+  userId: string;
+  expiryDate: string;
+  initiated: boolean;
+}
+
+export interface PlatformSummaryDTO {
+  totalUsers: number;
+  activeUsers: number;
+  deactivatedUsers: number;
+  studentsCount: number;
+  teachersCount: number;
+  adminsCount: number;
+  totalSubjects: number;
+  totalChapters: number;
+  totalDocuments: number;
+  activeDocuments: number;
+  totalQuizzes: number;
+  publishedQuizzes: number;
+  draftQuizzes: number;
+  completedQuizAttempts: number;
+  passedQuizAttempts: number;
+  averageQuizScore: number;
+  totalActiveEnrollments: number;
+}
+
+export interface UserActivityTrendDTO {
+  date: string;
+  registrationsCount: number;
+}
+
+export interface CourseActivityDTO {
+  subjectId: string;
+  subjectName: string;
+  subjectCode: string;
+  enrolledStudentsCount: number;
+  chaptersCount: number;
+  quizzesCount: number;
+  documentsCount: number;
+}
+
+export interface AiUsageSummaryDTO {
+  totalOperations: number;
+  successfulOperations: number;
+  failedOperations: number;
+  successRatePercentage: number;
+  averageLatencyMs: number;
+  totalTokens: number;
+  estimatedCostUsd: number;
+  operationsByFeature: Record<string, number>;
+  operationsByStatus: Record<string, number>;
+}
+
+export interface AiTelemetryRecord {
+  id: string;
+  operationId: string;
+  feature: string;
+  provider: string;
+  model: string;
+  userId?: string;
+  userEmail?: string;
+  startTime: string;
+  completionTime: string;
+  executionLatencyMs: number;
+  status: string;
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+  usageProvenance: string;
+  estimatedCostUsd?: number;
+  errorMessage?: string;
+  createdAt: string;
+}
+
+export interface TeacherVerificationDTO {
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  department?: string;
+  status: TeacherVerificationStatus;
+  rejectionReason?: string;
+  registeredAt: string;
+}
+
+export interface AdminDocumentDTO {
+  id: string;
+  originalFileName: string;
+  fileSize: number;
+  contentType: string;
+  teacherEmail: string;
+  subjectName: string;
+  active: boolean;
+  processingStatus: string;
+  createdAt: string;
+}
+
+export interface AdminQuizDTO {
+  id: string;
+  title: string;
+  subjectName: string;
+  status: string;
+  isPublished: boolean;
+  totalMarks: number;
+  creatorEmail: string;
+  createdAt: string;
+}
+

@@ -15,4 +15,11 @@ public interface StudentQuizResultRepository extends JpaRepository<StudentQuizRe
     List<StudentQuizResult> findByStudentIdAndQuizIdOrderByAttemptedAtDesc(UUID studentId, UUID quizId);
 
     List<StudentQuizResult> findByQuizId(UUID quizId);
+
+    long countByStudentId(UUID studentId);
+
+    long countByIsPassed(boolean isPassed);
+
+    @org.springframework.data.jpa.repository.Query("SELECT AVG(r.percentage) FROM StudentQuizResult r")
+    Double getAveragePercentage();
 }

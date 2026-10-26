@@ -18,4 +18,10 @@ public interface UploadedDocumentRepository extends JpaRepository<UploadedDocume
     List<UploadedDocument> findByChapterIdAndActiveTrue(UUID chapterId);
 
     Optional<UploadedDocument> findByIdAndActiveTrue(UUID id);
+
+    long countByTeacherId(UUID teacherId);
+
+    long countBySubjectId(UUID subjectId);
+
+    long countByActive(boolean active);
 }

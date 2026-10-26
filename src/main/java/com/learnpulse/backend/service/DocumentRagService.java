@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class DocumentRagService {
 
@@ -39,8 +38,35 @@ public class DocumentRagService {
     private final DocumentRetrievalService retrievalService;
     private final PromptManager promptManager;
     private final ChatClient chatClient;
+    private final AiTelemetryService aiTelemetryService;
 
     private final Set<UUID> indexedDocumentCache = ConcurrentHashMap.newKeySet();
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public DocumentRagService(UploadedDocumentRepository documentRepository,
+                              DocumentChunkingService chunkingService,
+                              VectorStore vectorStore,
+                              DocumentRetrievalService retrievalService,
+                              PromptManager promptManager,
+                              ChatClient chatClient,
+                              @org.springframework.beans.factory.annotation.Autowired(required = false) AiTelemetryService aiTelemetryService) {
+        this.documentRepository = documentRepository;
+        this.chunkingService = chunkingService;
+        this.vectorStore = vectorStore;
+        this.retrievalService = retrievalService;
+        this.promptManager = promptManager;
+        this.chatClient = chatClient;
+        this.aiTelemetryService = aiTelemetryService;
+    }
+
+    public DocumentRagService(UploadedDocumentRepository documentRepository,
+                              DocumentChunkingService chunkingService,
+                              VectorStore vectorStore,
+                              DocumentRetrievalService retrievalService,
+                              PromptManager promptManager,
+                              ChatClient chatClient) {
+        this(documentRepository, chunkingService, vectorStore, retrievalService, promptManager, chatClient, null);
+    }
 
     public DocumentRagResponse askDocument(User studentUser, DocumentRagRequest request) {
         if (studentUser == null) {
@@ -96,17 +122,41 @@ public class DocumentRagService {
         // 6. Execute LLM Call using Existing Qwen ChatClient
         String aiAnswer;
         boolean fallback = false;
+        Instant startTime = Instant.now();
         try {
             log.info("Dispatching RAG prompt with {} retrieved chunks to ChatClient/Ollama", retrievedChunks.size());
-            aiAnswer = chatClient.call(ragPrompt).getResult().getOutput().getContent();
+            org.springframework.ai.chat.ChatResponse chatResponse = chatClient.call(ragPrompt);
+            aiAnswer = (chatResponse != null && chatResponse.getResult() != null && chatResponse.getResult().getOutput() != null)
+                    ? chatResponse.getResult().getOutput().getContent()
+                    : null;
 
             if (!StringUtils.hasText(aiAnswer)) {
                 aiAnswer = NO_CONTEXT_FOUND_RESPONSE;
+            }
+            int promptTokens;
+            int compTokens;
+            String provenance;
+            if (chatResponse != null && chatResponse.getMetadata() != null && chatResponse.getMetadata().getUsage() != null
+                    && chatResponse.getMetadata().getUsage().getPromptTokens() != null && chatResponse.getMetadata().getUsage().getPromptTokens() > 0) {
+                promptTokens = chatResponse.getMetadata().getUsage().getPromptTokens().intValue();
+                compTokens = chatResponse.getMetadata().getUsage().getGenerationTokens() != null ? chatResponse.getMetadata().getUsage().getGenerationTokens().intValue() : 0;
+                provenance = "PROVIDER_REPORTED";
+            } else {
+                promptTokens = Math.max(1, (combinedContextText.length() + question.length()) / 4);
+                compTokens = Math.max(1, aiAnswer.length() / 4);
+                provenance = "LOCAL_ESTIMATION";
+            }
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("RAG_DOCUMENT_QA", "qwen2.5-coder:7b", studentUser, startTime, Instant.now(), "SUCCESS", promptTokens, compTokens, provenance, null);
             }
         } catch (Exception ex) {
             log.error("LLM execution failed during RAG request for document ID {}: {}", documentId, ex.getMessage(), ex);
             aiAnswer = LLM_FALLBACK_RESPONSE;
             fallback = true;
+            int promptTokens = Math.max(1, (combinedContextText.length() + question.length()) / 4);
+            if (aiTelemetryService != null) {
+                aiTelemetryService.recordOperation("RAG_DOCUMENT_QA", "qwen2.5-coder:7b", studentUser, startTime, Instant.now(), "FALLBACK", promptTokens, 0, "LOCAL_ESTIMATION", ex.getMessage());
+            }
         }
 
         // 7. Map Source Metadata

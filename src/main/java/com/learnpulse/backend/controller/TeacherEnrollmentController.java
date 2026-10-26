@@ -2,6 +2,7 @@ package com.learnpulse.backend.controller;
 
 import com.learnpulse.backend.dto.*;
 import com.learnpulse.backend.entity.User;
+import com.learnpulse.backend.security.TeacherVerificationGuard;
 import com.learnpulse.backend.service.EnrollmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class TeacherEnrollmentController {
 
     private final EnrollmentService enrollmentService;
+    private final TeacherVerificationGuard teacherVerificationGuard;
 
     @GetMapping("/subjects")
     @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
@@ -55,6 +57,7 @@ public class TeacherEnrollmentController {
             @PathVariable UUID subjectId,
             @Valid @RequestBody EnrollStudentRequest request) {
 
+        teacherVerificationGuard.checkVerifiedTeacher(teacher);
         EnrollmentDTO enrollment = enrollmentService.enrollStudentInSubject(teacher, subjectId, request.getStudentId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Student enrolled successfully", enrollment));
@@ -68,6 +71,7 @@ public class TeacherEnrollmentController {
             @PathVariable UUID subjectId,
             @PathVariable UUID studentId) {
 
+        teacherVerificationGuard.checkVerifiedTeacher(teacher);
         enrollmentService.unenrollStudentFromSubject(teacher, subjectId, studentId);
         return ResponseEntity.ok(ApiResponse.success("Student unenrolled successfully (historical results preserved)", null));
     }
