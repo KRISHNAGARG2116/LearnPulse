@@ -10,7 +10,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "user_profiles")
+@Table(name = "user_profiles", indexes = {
+        // Week 14 — Performance: supports admin teacher verification workflow queries
+        @Index(name = "idx_user_profile_teacher_status", columnList = "user_id, teacher_verification_status")
+})
 @Data
 @Builder
 @NoArgsConstructor

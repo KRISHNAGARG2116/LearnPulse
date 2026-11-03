@@ -10,7 +10,14 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "ai_telemetry_records")
+@Table(name = "ai_telemetry_records", indexes = {
+        // Week 14 — Performance: supports per-user AI usage queries (admin analytics, per-student reports)
+        @Index(name = "idx_ai_telemetry_user_feature", columnList = "user_id, feature"),
+        // Week 14 — Performance: supports feature-level aggregate analytics (operations by type/status)
+        @Index(name = "idx_ai_telemetry_feature_status", columnList = "feature, status"),
+        // Week 14 — Performance: supports time-window range queries (daily/weekly analytics)
+        @Index(name = "idx_ai_telemetry_created_at", columnList = "created_at")
+})
 @Data
 @Builder
 @NoArgsConstructor

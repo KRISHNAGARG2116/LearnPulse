@@ -7,7 +7,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "uploaded_documents")
+@Table(name = "uploaded_documents", indexes = {
+        // Week 14 — Performance: supports teacher document list queries (most frequent query path)
+        @Index(name = "idx_doc_teacher_active", columnList = "teacher_id, active"),
+        // Week 14 — Performance: supports subject-level document retrieval for RAG and content
+        @Index(name = "idx_doc_subject_active", columnList = "subject_id, active")
+})
 @Data
 @Builder
 @NoArgsConstructor

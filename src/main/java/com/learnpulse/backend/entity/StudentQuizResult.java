@@ -7,7 +7,12 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "student_quiz_results")
+@Table(name = "student_quiz_results", indexes = {
+        // Week 14 — Performance: supports student progress history queries (ordered by time)
+        @Index(name = "idx_quiz_result_student_time", columnList = "student_id, attempted_at"),
+        // Week 14 — Performance: supports per-quiz result aggregation in admin analytics
+        @Index(name = "idx_quiz_result_quiz_id", columnList = "quiz_id")
+})
 @Data
 @Builder
 @NoArgsConstructor

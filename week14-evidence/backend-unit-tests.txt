@@ -1,0 +1,72 @@
+=== LearnPulse Week 14 Backend Unit & AI Service Test Execution Evidence ===
+Date: 2026-11-03
+Environment: Java 21 (Eclipse Adoptium 21.0.6+7-LTS), Apache Maven 3.9.6, Spring Boot 3.2.5
+Agent Argument: -javaagent:~/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.13/byte-buddy-agent-1.14.13.jar
+
+1. PASSED UNIT & AI SERVICE TESTS (44 Tests Run, 44 Passed, 0 Failures, 0 Errors, 100% Pass Rate):
+-----------------------------------------------------------------------------------------------------
+A. com.learnpulse.backend.security.JwtProviderTest (9 Tests - ALL PASS)
+- testGenerateAccessTokenSuccess: Valid access token generation & claims verification -> PASS
+- testGenerateRefreshTokenSuccess: Valid refresh token generation & claims verification -> PASS
+- testValidateInvalidToken: Rejection of malformed/tampered JWT signatures -> PASS
+- testValidateSecretNullOrEmpty: SEC-02 rejection of null or empty secrets -> PASS
+- testValidateSecretInvalidBase64: SEC-02 rejection of malformed Base64 -> PASS
+- testValidateSecretTooShort: SEC-02 rejection of weak keys (< 256 bits) -> PASS
+- testValidateSecretDefaultInProduction: SEC-02 rejection of default dev secret in prod -> PASS
+- testValidateSecretDefaultInDevelopment: Default dev secret permitted with warning in dev -> PASS
+- testValidateSecretStrongInProduction: Valid 256-bit secret accepted and used -> PASS
+
+B. com.learnpulse.backend.rag.DocumentChunkingTest (5 Tests - ALL PASS)
+- testChunkingNormalDocument: Normal document chunking and metadata preservation -> PASS
+- testChunkingEmptyOrBlankDocument: Blank/null text handled gracefully without exception -> PASS
+- testMinimumChunkSizeEnforcement: Enforces 20-character minimum chunk size -> PASS
+- testSlidingWindowOverlap: 100-character sliding overlap verified -> PASS
+- testSpecialCharactersAndMultiline: Preserves multiline code & formatting -> PASS
+
+C. com.learnpulse.backend.ai.StructuredOutputParserTest (5 Tests - ALL PASS)
+- testCleanJsonTextAndParseValidObject: Strips markdown code fences (```json ... ```) -> PASS
+- testParseJsonWithSurroundingProse: Extracts JSON surrounded by conversational text -> PASS
+- testInvalidJsonThrowsApiException: Malformed JSON syntax handled gracefully -> PASS
+- testNullOrEmptyInputThrowsApiException: Empty LLM output handled -> PASS
+- testValidationConstraintsFailureThrowsApiException: Hibernate Validator constraint violations -> PASS
+
+D. com.learnpulse.backend.ai.CodeExplanationTest (5 Tests - ALL PASS)
+- testExplainCodeSuccess: Structured code explanation generation -> PASS
+- testExplainCodeLlmFailureThrows503ServiceUnavailable: Real Ollama timeout/failure produces 503 -> PASS
+- testPromptInjectionInCodeHandledSafely: XML encapsulation neutralizes injection -> PASS
+- testEmptyCodeThrowsApiException: Validation bounds enforced -> PASS
+- testOversizedCodeThrowsApiException: Maximum character limit enforced -> PASS
+
+E. com.learnpulse.backend.ai.StudyPlanTest (6 Tests - ALL PASS)
+- testGenerateStudyPlanSuccess: Study plan generation and timetable creation -> PASS
+- testStudyPlanLlmFailureThrows503ServiceUnavailable: LLM failure produces 503 -> PASS
+- testStudyPlanExceedingAvailableHoursRejected: Hours calculation constraints -> PASS
+- testInvalidStudyHoursThrowsApiException: Negative or excessive hours validation -> PASS
+- testPastExamDateThrowsApiException: Past exam dates rejected -> PASS
+- testEmptySubjectsThrowsApiException: Subject list validation -> PASS
+
+F. com.learnpulse.backend.ai.FlashcardGenerationTest (5 Tests - ALL PASS)
+- testGenerateFlashcardsSuccess: Flashcard generation & Q&A pairs -> PASS
+- testDeduplicateDuplicateFlashcardQuestions: Deduplication logic -> PASS
+- testFlashcardsLlmFailureThrows503ServiceUnavailable: LLM failure produces 503 -> PASS
+- testEmptyContentThrowsApiException: Empty content validation -> PASS
+- testOversizedContentThrowsApiException: Content length ceiling -> PASS
+
+G. com.learnpulse.backend.ai.DocumentSummarizationTest (5 Tests - ALL PASS)
+- testSummarizeDocumentSuccess: Material summary generation -> PASS
+- testSummarizeLlmFailureThrows503ServiceUnavailable: LLM failure produces 503 -> PASS
+- testSummarizeUnauthenticatedUserThrowsException: Authentication required -> PASS
+- testSummarizeBlankContentThrowsException: Empty content validation -> PASS
+- testSummarizeOversizedContentThrowsException: Maximum character bounds -> PASS
+
+H. com.learnpulse.backend.rag.DocumentEmbeddingTest (4 Tests - ALL PASS)
+- testEmbeddingClientFailureHandling: Ollama embedding timeout handled cleanly -> PASS
+- testEmbedQuery: Query vector embedding generation -> PASS
+- testEmbedDocument: Document chunk embedding generation -> PASS
+- testEmbedBatch: Batch chunk embedding generation -> PASS
+
+2. REMAINING TESTS (191 Spring Boot Tests Blocked by Environment):
+------------------------------------------------------------------
+- Test Classes: 191 integration tests annotated with @SpringBootTest (e.g., SecurityRbacIntegrationTest, EnrollmentIntegrationTest, AcademicHierarchyIntegrationTest)
+- Blocker: Attempting to start PostgreSQL via initdb in the macOS terminal sandbox fails with "FATAL: could not create shared memory segment: Operation not permitted (shmget)".
+- Status: Pre-deployment staging environment with live PostgreSQL 14+ will execute these 191 tests.
