@@ -1,0 +1,53 @@
+# ========================================================
+# LearnPulse AI LMS — Frontend Multi-Stage Dockerfile
+# Stage 1: Build static bundle with Node.js 20 & Vite
+# Stage 2: Serve optimized assets with Nginx 1.27 Alpine
+# ========================================================
+
+# --- Stage 1: Build Environment ---
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Cache dependencies by copying lockfiles first
+COPY package.json package-lock.json ./
+
+# Reproducible installation of dependencies
+RUN npm ci
+
+# Copy source code and build configurations
+COPY tsconfig.json vite.config.ts index.html ./
+COPY src ./src
+
+# Set build argument for API base URL (defaults to relative /api for Nginx reverse proxy)
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Build static production bundle with Vite and React.lazy code-splitting
+RUN npm run build
+
+# --- Stage 2: Runtime Environment ---
+FROM nginx:1.27-alpine
+
+LABEL maintainer="LearnPulse Engineering Team"
+LABEL description="LearnPulse AI LMS Frontend Nginx SPA & Reverse Proxy"
+LABEL version="1.0.0"
+
+# Remove default Nginx welcome configuration
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom reverse proxy and SPA routing configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy static distribution assets from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose HTTP port
+EXPOSE 80
+
+# Health check to ensure Nginx is responding to requests
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -q --spider http://127.0.0.1:80/health || exit 1
+
+# Standard foreground Nginx startup
+CMD ["nginx", "-g", "daemon off;"]

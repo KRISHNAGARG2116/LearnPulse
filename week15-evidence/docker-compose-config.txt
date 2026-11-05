@@ -1,0 +1,180 @@
+name: lmsinternship
+services:
+  backend:
+    build:
+      context: /Users/krishnagarg/lms internship
+      dockerfile: Dockerfile
+    container_name: learnpulse-backend
+    depends_on:
+      db:
+        condition: service_healthy
+        required: true
+      ollama:
+        condition: service_healthy
+        required: true
+    deploy:
+      resources:
+        limits:
+          cpus: 2
+          memory: "1610612736"
+        reservations:
+          cpus: 0.5
+          memory: "536870912"
+    environment:
+      DB_HOST: db
+      DB_NAME: learning_assistant_db
+      DB_PASSWORD: SecureLearnPulsePass2026!
+      DB_PORT: "5432"
+      DB_USERNAME: postgres
+      FILE_UPLOAD_DIR: /app/uploads/
+      JAVA_OPTS: -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -Djava.security.egd=file:/dev/./urandom
+      JWT_SECRET: TGVhcm5QdWxzZUxNU19Qcm9kdWN0aW9uR3JhZGVfU3VwZXJTZWN1cmVLZXlfMjAyNl9WZXJpZl9YWVoh
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_CONNECT_TIMEOUT_MS: "10000"
+      OLLAMA_EMBEDDING_MODEL: nomic-embed-text:latest
+      OLLAMA_MODEL: qwen2.5-coder:7b
+      OLLAMA_READ_TIMEOUT_MS: "60000"
+      OLLAMA_TEMPERATURE: "0.7"
+      SERVER_PORT: "8080"
+      SPRING_PROFILES_ACTIVE: prod
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:8080/api/v1/status || exit 1
+      timeout: 5s
+      interval: 15s
+      retries: 5
+      start_period: 45s
+    image: learnpulse-backend:week15
+    networks:
+      learnpulse-network: null
+    ports:
+      - mode: ingress
+        target: 8080
+        published: "8080"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: backend_uploads
+        target: /app/uploads
+        volume: {}
+  db:
+    container_name: learnpulse-db
+    deploy:
+      resources:
+        limits:
+          cpus: 1.5
+          memory: "1073741824"
+        reservations:
+          cpus: 0.25
+          memory: "268435456"
+    environment:
+      POSTGRES_DB: learning_assistant_db
+      POSTGRES_PASSWORD: SecureLearnPulsePass2026!
+      POSTGRES_USER: postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d learning_assistant_db
+      timeout: 5s
+      interval: 10s
+      retries: 5
+      start_period: 10s
+    image: pgvector/pgvector:pg16
+    networks:
+      learnpulse-network: null
+    ports:
+      - mode: ingress
+        target: 5432
+        published: "5432"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+        volume: {}
+      - type: bind
+        source: /Users/krishnagarg/lms internship/docker/init-db
+        target: /docker-entrypoint-initdb.d
+        read_only: true
+        bind: {}
+  frontend:
+    build:
+      context: /Users/krishnagarg/lms internship
+      dockerfile: Dockerfile.frontend
+    container_name: learnpulse-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+        required: true
+    deploy:
+      resources:
+        limits:
+          cpus: 0.5
+          memory: "268435456"
+        reservations:
+          cpus: 0.1
+          memory: "67108864"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://localhost:80/health || exit 1
+      timeout: 5s
+      interval: 15s
+      retries: 3
+      start_period: 10s
+    image: learnpulse-frontend:week15
+    networks:
+      learnpulse-network: null
+    ports:
+      - mode: ingress
+        target: 80
+        published: "3000"
+        protocol: tcp
+    restart: unless-stopped
+  ollama:
+    container_name: learnpulse-ollama
+    deploy:
+      resources:
+        limits:
+          cpus: 4
+          memory: "4294967296"
+        reservations:
+          cpus: 1
+          memory: "1610612736"
+    healthcheck:
+      test:
+        - CMD
+        - ollama
+        - list
+      timeout: 10s
+      interval: 15s
+      retries: 5
+      start_period: 15s
+    image: ollama/ollama:0.3.14
+    networks:
+      learnpulse-network: null
+    ports:
+      - mode: ingress
+        target: 11434
+        published: "11434"
+        protocol: tcp
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: ollama_data
+        target: /root/.ollama
+        volume: {}
+networks:
+  learnpulse-network:
+    name: learnpulse-network
+    driver: bridge
+volumes:
+  backend_uploads:
+    name: learnpulse_backend_uploads
+  ollama_data:
+    name: learnpulse_ollama_data
+  postgres_data:
+    name: learnpulse_postgres_data

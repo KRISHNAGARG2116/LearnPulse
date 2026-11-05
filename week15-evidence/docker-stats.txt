@@ -1,0 +1,12 @@
+NAME                  CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O
+learnpulse-frontend   0.00%     7.938MiB / 256MiB     3.10%     1.21kB / 126B     868kB / 4.1kB
+learnpulse-backend    0.20%     493.5MiB / 1.5GiB     32.13%    81.7kB / 107kB    18MB / 115kB
+learnpulse-db         0.06%     27.51MiB / 1GiB       2.69%     8.06kB / 7.27kB   0B / 225kB
+learnpulse-ollama     0.00%     10.91MiB / 3.827GiB   0.28%     1.33kB / 126B     0B / 0B
+elastic_khayyam       0.00%     11.87MiB / 3.827GiB   0.30%     15.1kB / 3.3kB    0B / 0B
+NAME                  CPU %     MEM USAGE / LIMIT     MEM %     NET I/O           BLOCK I/O
+learnpulse-frontend   0.00%     8.012MiB / 256MiB     3.13%     39kB / 45.2kB     868kB / 4.1kB
+learnpulse-backend    0.41%     494.5MiB / 1.5GiB     32.19%    100kB / 138kB     18MB / 127kB
+learnpulse-db         7.69%     28.08MiB / 1GiB       2.74%     13.3kB / 12.2kB   0B / 258kB
+learnpulse-ollama     0.00%     11.43MiB / 3.827GiB   0.29%     1.42kB / 126B     0B / 0B
+elastic_khayyam       0.00%     11.87MiB / 3.827GiB   0.30%     15.1kB / 3.3kB    0B / 0B

@@ -1,0 +1,34 @@
+# Git and IDE
+.git
+.gitignore
+.idea
+.vscode
+*.iml
+.DS_Store
+
+# Local development binaries and runtimes
+.jdk21
+.tools
+jdk21_clean.tar.gz
+*.tar.gz
+
+# Node.js and Frontend
+node_modules
+dist
+
+# Maven and Java
+target
+*.class
+
+# Runtime files, logs, uploads
+uploads
+*.log
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Evidence and test scripts
+*.py
+week*-evidence

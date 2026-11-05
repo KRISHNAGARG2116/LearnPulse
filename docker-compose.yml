@@ -1,0 +1,175 @@
+# ==============================================================================
+# LearnPulse AI LMS — Production Multi-Container Orchestration (Docker Compose)
+# Services:
+#   - db: PostgreSQL 16 with pgvector extension & health checks
+#   - ollama: Ollama 0.3.14 for local LLM & embeddings
+#   - backend: Spring Boot 3.2.5 (Java 21) REST API & RAG Engine
+#   - frontend: Nginx 1.27 serving React 19 SPA & API reverse proxy
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Database: PostgreSQL 16 with pgvector
+  # ----------------------------------------------------------------------------
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: ${COMPOSE_PROJECT_NAME:-learnpulse}-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-learning_assistant_db}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${DB_PORT_MAP:-5432}:5432"
+    networks:
+      - learnpulse-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-learning_assistant_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ----------------------------------------------------------------------------
+  # 2. AI Infrastructure: Ollama Local LLM Server
+  # ----------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:0.3.14
+    container_name: ${COMPOSE_PROJECT_NAME:-learnpulse}-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "${OLLAMA_PORT_MAP:-11434}:11434"
+    networks:
+      - learnpulse-network
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4096M
+        reservations:
+          cpus: '1.0'
+          memory: 1536M
+
+  # ----------------------------------------------------------------------------
+  # 3. Backend Service: Spring Boot 3.2.5 (Java 21)
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: learnpulse-backend:week15
+    container_name: ${COMPOSE_PROJECT_NAME:-learnpulse}-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      SERVER_PORT: 8080
+      # Database connection using internal Compose DNS
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-learning_assistant_db}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Security: Production JWT secret enforced
+      JWT_SECRET: ${JWT_SECRET}
+      # AI integration using internal Compose DNS
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5-coder:7b}
+      OLLAMA_EMBEDDING_MODEL: ${OLLAMA_EMBEDDING_MODEL:-nomic-embed-text:latest}
+      OLLAMA_TEMPERATURE: ${OLLAMA_TEMPERATURE:-0.7}
+      OLLAMA_CONNECT_TIMEOUT_MS: ${OLLAMA_CONNECT_TIMEOUT_MS:-15000}
+      OLLAMA_READ_TIMEOUT_MS: ${OLLAMA_READ_TIMEOUT_MS:-180000}
+      # File storage path inside container
+      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR:-/app/uploads/}
+      # Container-aware JVM memory options
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0 -Djava.security.egd=file:/dev/./urandom"
+    volumes:
+      - backend_uploads:/app/uploads
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - learnpulse-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/status || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1536M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ----------------------------------------------------------------------------
+  # 4. Frontend Service: Nginx 1.27 + React 19 SPA
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    image: learnpulse-frontend:week15
+    container_name: ${COMPOSE_PROJECT_NAME:-learnpulse}-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    networks:
+      - learnpulse-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:80/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+# ------------------------------------------------------------------------------
+# Persistent Volumes Definition
+# ------------------------------------------------------------------------------
+volumes:
+  postgres_data:
+  ollama_data:
+  backend_uploads:
+
+# ------------------------------------------------------------------------------
+# Dedicated Internal Bridge Network
+# ------------------------------------------------------------------------------
+networks:
+  learnpulse-network:
+    driver: bridge

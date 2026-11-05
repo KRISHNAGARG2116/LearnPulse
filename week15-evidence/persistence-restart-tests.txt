@@ -1,0 +1,39 @@
+>>> docker exec learnpulse-db psql -U postgres -d learning_assistant_db -c "INSERT INTO infrastructure_checks (check_name, status, details, execution_time) VALUES ('docker_persistence_test', 'SUCCESS', 'Pre-restart record', NOW());"
+ERROR:  column "check_name" of relation "infrastructure_checks" does not exist
+LINE 1: INSERT INTO infrastructure_checks (check_name, status, detai...
+                                           ^
+>>> docker compose restart db
+Container learnpulse-db Restarting 
+ Container learnpulse-db Started
+>>> docker exec learnpulse-db psql -U postgres -d learning_assistant_db -c "SELECT * FROM infrastructure_checks WHERE check_name = 'docker_persistence_test';"
+ERROR:  column "check_name" does not exist
+LINE 1: SELECT * FROM infrastructure_checks WHERE check_name = 'dock...
+                                                  ^
+>>> docker compose restart ollama
+Container learnpulse-ollama Restarting 
+ Container learnpulse-ollama Started
+>>> docker exec learnpulse-ollama ollama list
+NAME                       ID              SIZE      MODIFIED           
+nomic-embed-text:latest    0a109f422b47    274 MB    About a minute ago
+>>> docker compose restart backend frontend
+Container learnpulse-backend Restarting 
+ Container learnpulse-frontend Restarting 
+ Container learnpulse-frontend Started 
+ Container learnpulse-backend Started
+>>> docker compose ps --format "table {{.Name}}	{{.Status}}	{{.Service}}"
+NAME                  STATUS                    SERVICE
+learnpulse-backend    Up 20 seconds (healthy)   backend
+learnpulse-db         Up 42 seconds (healthy)   db
+learnpulse-frontend   Up 20 seconds (healthy)   frontend
+learnpulse-ollama     Up 31 seconds (healthy)   ollama
+INSERT 0 1
+ id |          checked_at          |     component_name      | status  
+----+------------------------------+-------------------------+---------
+  1 | 2026-11-05 07:45:32.51004+00 | docker_persistence_test | SUCCESS
+(1 row)
+
+ id |          checked_at          |     component_name      | status  
+----+------------------------------+-------------------------+---------
+  1 | 2026-11-05 07:45:32.51004+00 | docker_persistence_test | SUCCESS
+(1 row)
+

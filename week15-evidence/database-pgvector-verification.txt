@@ -1,0 +1,31 @@
+                                                              version                                                               
+------------------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 16.14 (Debian 16.14-1.pgdg12+1) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit
+(1 row)
+
+ extname | extversion 
+---------+------------
+ vector  | 0.8.2
+(1 row)
+
+                 List of relations
+ Schema |         Name          | Type  |  Owner   
+--------+-----------------------+-------+----------
+ public | ai_chat_history       | table | postgres
+ public | ai_telemetry_records  | table | postgres
+ public | chapters              | table | postgres
+ public | infrastructure_checks | table | postgres
+ public | notes                 | table | postgres
+ public | password_reset_tokens | table | postgres
+ public | questions             | table | postgres
+ public | quizzes               | table | postgres
+ public | student_enrollments   | table | postgres
+ public | student_quiz_results  | table | postgres
+ public | subjects              | table | postgres
+ public | teacher_subjects      | table | postgres
+ public | uploaded_documents    | table | postgres
+ public | user_profiles         | table | postgres
+ public | users                 | table | postgres
+ public | vector_store          | table | postgres
+(16 rows)
+

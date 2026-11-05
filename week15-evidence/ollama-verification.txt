@@ -1,0 +1,18 @@
+NAME    ID    SIZE    MODIFIED 
+NAME                       ID              SIZE      MODIFIED      
+nomic-embed-text:latest    0a109f422b47    274 MB    6 seconds ago    
+{"embedding":[-0.22573970258235931,1.433344841003418,-2.8937981128692627,-0.9519011974334717,1.1109209060668945,-0.5878065824508667,0.043055616319179535,-0.3739655017852783,-0.1132592111825943,-0.3999
+
+=== Direct Text Generation Test (qwen2.5-coder:0.5b) ===
+Model: qwen2.5-coder:0.5b (397 MB)
+Prompt: Write a 1-line Python function to calculate the square of a number.
+Response: def square(number):
+    return number ** 2
+Total Duration: 6.95s, Load Duration: 4.66s, Eval Count: 11 tokens
+
+=== End-to-End LMS AI Chat Test (POST /api/ai/chat) ===
+User: docker.student@learnpulse.com (STUDENT)
+Endpoint: http://localhost:3000/api/ai/chat (via Nginx reverse proxy)
+Status: 200 OK
+AI Tutor Response: QuickSort is a divide-and-conquer sorting algorithm that repeatedly selects the...
+Database Persistence: Verified in public.ai_chat_history (conversation_id: cs-conv-workflow-1, fallback: false)
